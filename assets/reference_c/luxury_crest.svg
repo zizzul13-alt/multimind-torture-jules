@@ -1,0 +1,7 @@
+<svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="90" cy="90" r="85" stroke="#C5A059" stroke-width="1.5"/>
+  <circle cx="90" cy="90" r="78" stroke="#C5A059" stroke-width="0.5" stroke-dasharray="2 4"/>
+  <path d="M90 20 L95 40 L115 40 L100 52 L105 72 L90 60 L75 72 L80 52 L65 40 L85 40 Z" fill="#C5A059"/>
+  <text x="90" y="110" fill="#1A1A1A" font-family="serif" font-size="18" text-anchor="middle" letter-spacing="4">MULTIMIND</text>
+  <text x="90" y="130" fill="#8C733E" font-family="serif" font-size="10" text-anchor="middle" letter-spacing="2">MAISON DE SYNTHÈSE</text>
+</svg>
