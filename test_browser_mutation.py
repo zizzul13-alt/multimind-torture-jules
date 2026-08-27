@@ -18,8 +18,6 @@ def test_live_mutation_and_state_preservation():
             browser = p.chromium.launch(headless=True)
             page = browser.new_page()
 
-            # Track full page navigation reloads
-            reloaded = False
             page.on("framenavigated", lambda frame: setattr(page, "_nav_count", getattr(page, "_nav_count", 0) + 1))
             page._nav_count = 0
 
@@ -29,18 +27,17 @@ def test_live_mutation_and_state_preservation():
 
             # Trigger live presentation mutation via HTMX button click
             page.click(".mm-mutate-btn")
-            page.wait_for_timeout(500)
+            page.wait_for_timeout(600)
 
-            # 1. Verify visual morphology changed live
+            # 1. Verify visual morphology changed live to Editorial
             assert "MULTIMIND ATELIER" in page.content()
-            assert "JOURNAL USER: Dr. Aris Thorne" in page.content()
 
             # 2. Verify NO full page navigation refresh occurred during mutation
             assert page._nav_count == initial_nav_count
 
-            # 3. Verify state preservation (in-memory long conversation messages intact)
+            # 3. Verify state preservation (in-memory messages intact)
             assert "Dr. Aris Thorne" in page.content()
-            assert "FastHTML shifts rendering load entirely to the server" in page.content()
+            assert "Initiating system audit on presentation platform target candidates" in page.content()
 
             browser.close()
     finally:

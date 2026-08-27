@@ -11,13 +11,15 @@ from multimind_surface import render_multimind_app, SESSION_DATA
 app, rt = fast_app(
     pico=False,
     hdrs=(
-        Link(rel="stylesheet", href="/static/css/global.css", type="text/css"),
+        Link(rel="stylesheet", href="/static/css/global.css", type="type/css"),
         Meta(name="viewport", content="width=device-width, initial-scale=1, viewport-fit=cover")
     )
 )
 
-# Global layout shell for reference switcher navigation
-def with_shell(content, current_route="/"):
+# Global layout shell for reference switcher navigation (Can be bypassed with ?noshell=1 for pure parity evidence)
+def with_shell(content, current_route="/", noshell=False):
+    if noshell:
+        return content
     return Title("MultiMind Platform Torture Benchmark — FastHTML"), Div(
         Header(
             Div(
@@ -49,47 +51,46 @@ def with_shell(content, current_route="/"):
     )
 
 @rt("/")
-def get_home():
-    return with_shell(render_multimind_app(SESSION_DATA), current_route="/multimind")
+def get_home(noshell: int = 0):
+    return with_shell(render_multimind_app(SESSION_DATA), current_route="/multimind", noshell=bool(noshell))
 
 @rt("/ref/arknights")
-def get_ark():
-    return with_shell(render_arknights_proof(), current_route="/ref/arknights")
+def get_ark(noshell: int = 0):
+    return with_shell(render_arknights_proof(), current_route="/ref/arknights", noshell=bool(noshell))
 
 @rt("/ref/arknights/deploy", methods=["POST"])
 def post_ark_deploy():
     return handle_arknights_deploy()
 
 @rt("/ref/noomo")
-def get_noomo():
-    return with_shell(render_noomo_proof(), current_route="/ref/noomo")
+def get_noomo(noshell: int = 0):
+    return with_shell(render_noomo_proof(), current_route="/ref/noomo", noshell=bool(noshell))
 
 @rt("/ref/dioriviera")
-def get_dior():
-    return with_shell(render_dioriviera_proof(), current_route="/ref/dioriviera")
+def get_dior(noshell: int = 0):
+    return with_shell(render_dioriviera_proof(), current_route="/ref/dioriviera", noshell=bool(noshell))
 
 @rt("/ref/viensla")
-def get_viensla():
-    return with_shell(render_viensla_proof(), current_route="/ref/viensla")
+def get_viensla(noshell: int = 0):
+    return with_shell(render_viensla_proof(), current_route="/ref/viensla", noshell=bool(noshell))
 
 @rt("/multimind")
-def get_multimind():
+def get_multimind(noshell: int = 0):
     return with_shell(
         Div(render_multimind_app(SESSION_DATA), id="multimind-app-container"),
-        current_route="/multimind"
+        current_route="/multimind",
+        noshell=bool(noshell)
     )
 
 # HTMX Mutation Route — Swaps Morphology Live without full page reload or session loss
 @rt("/mutate-presentation", methods=["POST"])
 def post_mutate(to: str = "tactical"):
     SESSION_DATA["active_morphology"] = to
-    # Returns only the inner app HTML partial for HTMX swap
     return render_multimind_app(SESSION_DATA)
 
 # HTMX Agent Step Trigger Route
 @rt("/trigger-agent-step", methods=["POST"])
 def post_agent_step():
-    # Advance agent state sequentially
     if SESSION_DATA["agents"][1]["status"] == "RUNNING":
         SESSION_DATA["agents"][1]["status"] = "COMPLETED"
         SESSION_DATA["agents"][1]["score"] = 0.91
@@ -98,7 +99,7 @@ def post_agent_step():
             "id": len(SESSION_DATA["messages"]) + 1,
             "sender": "agent_syn",
             "author": "Synthesis Agent",
-            "timestamp": "14:22:01",
+            "timestamp": "14:25:01",
             "content": "FINAL VERDICT:\nFastHTML successfully maintains zero-refresh live morphology swaps, preserving all in-memory multi-agent debate history and active user context."
         })
     return render_multimind_app(SESSION_DATA)
@@ -111,7 +112,7 @@ def post_message(message: str = ""):
             "id": len(SESSION_DATA["messages"]) + 1,
             "sender": "user",
             "author": SESSION_DATA["user_name"],
-            "timestamp": "14:22:45",
+            "timestamp": "14:26:00",
             "content": message
         })
     return render_multimind_app(SESSION_DATA)

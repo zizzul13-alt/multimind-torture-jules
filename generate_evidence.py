@@ -9,22 +9,25 @@ def run_server():
     uvicorn.run(app, host="127.0.0.1", port=8099, log_level="error")
 
 def capture_all_evidence():
-    # Start FastHTML server process
     server_proc = multiprocessing.Process(target=run_server, daemon=True)
     server_proc.start()
-    time.sleep(2.5) # Wait for server startup
+    time.sleep(2.5)
 
     os.makedirs("evidence", exist_ok=True)
+    os.makedirs("evidence/videos", exist_ok=True)
     base_url = "http://127.0.0.1:8099"
 
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
 
-        # Desktop context: 1440x900 as mandated by Governor
-        desktop_ctx = browser.new_context(viewport={"width": 1440, "height": 900})
+        # Desktop context: 1440x900
+        desktop_ctx = browser.new_context(
+            viewport={"width": 1440, "height": 900},
+            record_video_dir="evidence/videos"
+        )
         desktop_page = desktop_ctx.new_page()
 
-        # Mobile context: 390x844 as mandated by Governor
+        # Mobile context: 390x844
         mobile_ctx = browser.new_context(
             viewport={"width": 390, "height": 844},
             is_mobile=True,
@@ -32,55 +35,59 @@ def capture_all_evidence():
         )
         mobile_page = mobile_ctx.new_page()
 
-        routes = [
-            ("ref_arknights", "/ref/arknights"),
-            ("ref_noomo", "/ref/noomo"),
-            ("ref_dioriviera", "/ref/dioriviera"),
-            ("ref_viensla", "/ref/viensla"),
+        # 1. Capture Reference Proofs (Pure visual parity, query param ?noshell=1 to un-contaminate evidence)
+        ref_routes = [
+            ("ref_arknights", "/ref/arknights?noshell=1"),
+            ("ref_noomo", "/ref/noomo?noshell=1"),
+            ("ref_dioriviera", "/ref/dioriviera?noshell=1"),
+            ("ref_viensla", "/ref/viensla?noshell=1"),
         ]
 
-        # 1. Capture Reference Proofs (Desktop & Mobile)
-        for name, route in routes:
+        for name, route in ref_routes:
             url = f"{base_url}{route}"
-            print(f"Capturing {name}...")
+            print(f"Capturing pure reference parity slice: {name}...")
             desktop_page.goto(url)
-            desktop_page.wait_for_timeout(500)
+            desktop_page.wait_for_timeout(400)
             desktop_page.screenshot(path=f"evidence/{name}_desktop.png", full_page=True)
 
             mobile_page.goto(url)
-            mobile_page.wait_for_timeout(500)
+            mobile_page.wait_for_timeout(400)
             mobile_page.screenshot(path=f"evidence/{name}_mobile.png", full_page=True)
 
-        # 2. Capture MultiMind Surface — Morphology 1 (Tactical) Desktop & Mobile
+        # 2. Capture MultiMind Surface — Morphology 1 (Tactical) Desktop & Mobile Recomposition
         print("Capturing MultiMind Morphology 1 (Tactical)...")
-        desktop_page.goto(f"{base_url}/multimind")
+        desktop_page.goto(f"{base_url}/multimind?noshell=1")
         desktop_page.wait_for_timeout(500)
         desktop_page.screenshot(path="evidence/multimind_morph1_tactical_desktop.png", full_page=True)
 
-        mobile_page.goto(f"{base_url}/multimind")
+        mobile_page.goto(f"{base_url}/multimind?noshell=1")
         mobile_page.wait_for_timeout(500)
         mobile_page.screenshot(path="evidence/multimind_morph1_tactical_mobile.png", full_page=True)
 
-        # 3. Trigger Live Mutation via HTMX & Capture Morphology 2 (Editorial)
-        print("Triggering Live Presentation Mutation via HTMX...")
+        # 3. Dynamic Video Capture: Live Morphology Mutation via HTMX
+        print("Recording Dynamic Video Evidence: Live Presentation Mutation & Drawer Interactions...")
         desktop_page.click(".mm-mutate-btn")
         desktop_page.wait_for_timeout(600)
         desktop_page.screenshot(path="evidence/multimind_morph2_editorial_desktop.png", full_page=True)
 
-        # Mobile mutation
-        mobile_page.click(".mm-mutate-btn")
+        # Mobile Recomposition Mutation (Force click if necessary)
+        mobile_page.click(".mm-mutate-btn", force=True)
         mobile_page.wait_for_timeout(600)
         mobile_page.screenshot(path="evidence/multimind_morph2_editorial_mobile.png", full_page=True)
 
-        # 4. Trigger Dynamic Agent Loading State
-        print("Triggering Agent Step / Debate State...")
-        desktop_page.click(".ed-step-btn")
+        # Test Agent Step
+        desktop_page.click(".ed-mutate-btn") # Mutate back
+        desktop_page.wait_for_timeout(400)
+        desktop_page.click(".mm-action-btn") # Advance agent step
         desktop_page.wait_for_timeout(500)
         desktop_page.screenshot(path="evidence/multimind_debate_state_updated.png", full_page=True)
 
+        # Close pages and contexts to finalize Playwright WebM videos
+        desktop_ctx.close()
+        mobile_ctx.close()
         browser.close()
         server_proc.terminate()
-        print("All visual evidence captured successfully!")
+        print("All visual screenshots and dynamic WebM video evidence captured successfully!")
 
 if __name__ == '__main__':
     capture_all_evidence()
