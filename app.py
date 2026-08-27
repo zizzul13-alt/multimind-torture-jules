@@ -11,7 +11,7 @@ from multimind_surface import render_multimind_app, SESSION_DATA
 app, rt = fast_app(
     pico=False,
     hdrs=(
-        Link(rel="stylesheet", href="/static/css/global.css", type="type/css"),
+        Link(rel="stylesheet", href="/static/css/global.css", type="text/css"),
         Meta(name="viewport", content="width=device-width, initial-scale=1, viewport-fit=cover")
     )
 )
@@ -76,11 +76,10 @@ def get_viensla(noshell: int = 0):
 
 @rt("/multimind")
 def get_multimind(noshell: int = 0):
-    return with_shell(
-        Div(render_multimind_app(SESSION_DATA), id="multimind-app-container"),
-        current_route="/multimind",
-        noshell=bool(noshell)
-    )
+    inner = Div(render_multimind_app(SESSION_DATA), id="multimind-app-container")
+    if noshell:
+        return Title("MultiMind Benchmark"), inner
+    return with_shell(inner, current_route="/multimind", noshell=False)
 
 # HTMX Mutation Route — Swaps Morphology Live without full page reload or session loss
 @rt("/mutate-presentation", methods=["POST"])

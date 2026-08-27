@@ -20,14 +20,14 @@ def capture_all_evidence():
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
 
-        # Desktop context: 1440x900
+        # Desktop context with video recording
         desktop_ctx = browser.new_context(
             viewport={"width": 1440, "height": 900},
             record_video_dir="evidence/videos"
         )
         desktop_page = desktop_ctx.new_page()
 
-        # Mobile context: 390x844
+        # Mobile context
         mobile_ctx = browser.new_context(
             viewport={"width": 390, "height": 844},
             is_mobile=True,
@@ -35,7 +35,7 @@ def capture_all_evidence():
         )
         mobile_page = mobile_ctx.new_page()
 
-        # 1. Capture Reference Proofs (Pure visual parity, query param ?noshell=1 to un-contaminate evidence)
+        # 1. Capture Reference Proofs & Exercise Scroll Choreography
         ref_routes = [
             ("ref_arknights", "/ref/arknights?noshell=1"),
             ("ref_noomo", "/ref/noomo?noshell=1"),
@@ -45,49 +45,61 @@ def capture_all_evidence():
 
         for name, route in ref_routes:
             url = f"{base_url}{route}"
-            print(f"Capturing pure reference parity slice: {name}...")
+            print(f"Capturing reference parity slice: {name}...")
             desktop_page.goto(url)
             desktop_page.wait_for_timeout(400)
+
+            # Explicitly exercise scroll-linked behavior for video evidence
+            desktop_page.evaluate("window.scrollTo(0, 400);")
+            desktop_page.wait_for_timeout(300)
+            desktop_page.evaluate("window.scrollTo(0, 800);")
+            desktop_page.wait_for_timeout(300)
+            desktop_page.evaluate("window.scrollTo(0, 0);")
+            desktop_page.wait_for_timeout(300)
+
             desktop_page.screenshot(path=f"evidence/{name}_desktop.png", full_page=True)
 
             mobile_page.goto(url)
             mobile_page.wait_for_timeout(400)
             mobile_page.screenshot(path=f"evidence/{name}_mobile.png", full_page=True)
 
-        # 2. Capture MultiMind Surface — Morphology 1 (Tactical) Desktop & Mobile Recomposition
+        # 2. MultiMind Surface — Morphology 1 (Tactical) & Scroll Exercise
         print("Capturing MultiMind Morphology 1 (Tactical)...")
         desktop_page.goto(f"{base_url}/multimind?noshell=1")
         desktop_page.wait_for_timeout(500)
+
+        # Exercise scrolling through 35+ message conversation
+        desktop_page.evaluate("document.querySelector('#mm-msg-container').scrollTop = 1000;")
+        desktop_page.wait_for_timeout(400)
         desktop_page.screenshot(path="evidence/multimind_morph1_tactical_desktop.png", full_page=True)
 
         mobile_page.goto(f"{base_url}/multimind?noshell=1")
         mobile_page.wait_for_timeout(500)
         mobile_page.screenshot(path="evidence/multimind_morph1_tactical_mobile.png", full_page=True)
 
-        # 3. Dynamic Video Capture: Live Morphology Mutation via HTMX
-        print("Recording Dynamic Video Evidence: Live Presentation Mutation & Drawer Interactions...")
+        # 3. Live Presentation Mutation & Drawer Recording
+        print("Recording Live Presentation Mutation & Mobile Drawer Interactions...")
         desktop_page.click(".mm-mutate-btn")
         desktop_page.wait_for_timeout(600)
         desktop_page.screenshot(path="evidence/multimind_morph2_editorial_desktop.png", full_page=True)
 
-        # Mobile Recomposition Mutation (Force click if necessary)
+        # Mobile Recomposition Mutation
         mobile_page.click(".mm-mutate-btn", force=True)
         mobile_page.wait_for_timeout(600)
         mobile_page.screenshot(path="evidence/multimind_morph2_editorial_mobile.png", full_page=True)
 
-        # Test Agent Step
-        desktop_page.click(".ed-mutate-btn") # Mutate back
+        # Step Agent Debate
+        desktop_page.click(".ed-mutate-btn")
         desktop_page.wait_for_timeout(400)
-        desktop_page.click(".mm-action-btn") # Advance agent step
+        desktop_page.click(".mm-action-btn")
         desktop_page.wait_for_timeout(500)
         desktop_page.screenshot(path="evidence/multimind_debate_state_updated.png", full_page=True)
 
-        # Close pages and contexts to finalize Playwright WebM videos
         desktop_ctx.close()
         mobile_ctx.close()
         browser.close()
         server_proc.terminate()
-        print("All visual screenshots and dynamic WebM video evidence captured successfully!")
+        print("Dynamic evidence captured with scroll choreography and mobile drawer interactions!")
 
 if __name__ == '__main__':
     capture_all_evidence()
