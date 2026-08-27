@@ -77,8 +77,8 @@ def render_tactical_morphology(session: dict):
                         "MUTATE TO EDITORIAL MORPHOLOGY",
                         cls="mm-mutate-btn",
                         hx_post="/mutate-presentation?to=editorial",
-                        hx_target="#multimind-morph-target",
-                        hx_swap="outerHTML"
+                        hx_target="#multimind-app-container",
+                        hx_swap="innerHTML"
                     ),
                     cls="mm-header-controls"
                 ),
@@ -158,8 +158,8 @@ def render_tactical_morphology(session: dict):
                         "ADVANCE DEBATE STEP",
                         cls="mm-action-btn",
                         hx_post="/trigger-agent-step",
-                        hx_target="#multimind-morph-target",
-                        hx_swap="outerHTML"
+                        hx_target="#multimind-app-container",
+                        hx_swap="innerHTML"
                     ),
                     cls="mm-sidebar-actions"
                 ),
@@ -195,8 +195,8 @@ def render_tactical_morphology(session: dict):
                         Input(type="text", name="message", placeholder="Transmit instruction to multi-agent swarm...", cls="mm-input-field", required=True),
                         Button("TRANSMIT", type="submit", cls="mm-submit-btn"),
                         hx_post="/send-message",
-                        hx_target="#multimind-morph-target",
-                        hx_swap="outerHTML",
+                        hx_target="#multimind-app-container",
+                        hx_swap="innerHTML",
                         cls="mm-input-form"
                     ),
                     cls="mm-input-bar"
@@ -228,7 +228,7 @@ def render_tactical_morphology(session: dict):
                 top: 0;
                 z-index: 50;
             }
-            .mm-tactical-header-inner { display: flex; justify-content: space-between; align-items: center; max-width: 1600px; margin: 0 auto; position: relative; z-index: 100; }
+            .mm-tactical-header-inner { display: flex; justify-content: space-between; align-items: center; max-width: 1600px; margin: 0 auto; }
             .mm-brand-prefix { color: #ff0055; font-weight: 900; letter-spacing: 2px; }
             .mm-brand-main { color: #00e6c8; font-weight: 800; letter-spacing: 1px; margin-left: 6px; }
             .mm-user-tag { font-size: 0.8rem; color: #ffb400; margin-right: 16px; }
@@ -326,7 +326,7 @@ def render_tactical_morphology(session: dict):
                     display: none;
                     justify-content: flex-end;
                 }
-                .mm-mobile-drawer.active { display: flex !important; z-index: 200; }
+                .mm-mobile-drawer.active { display: flex !important; }
                 .drawer-content {
                     width: 80%;
                     max-width: 300px;
@@ -364,8 +364,8 @@ def render_editorial_morphology(session: dict):
                         "MUTATE TO TACTICAL MORPHOLOGY",
                         cls="ed-mutate-btn",
                         hx_post="/mutate-presentation?to=tactical",
-                        hx_target="#multimind-morph-target",
-                        hx_swap="outerHTML"
+                        hx_target="#multimind-app-container",
+                        hx_swap="innerHTML"
                     ),
                     cls="ed-header-controls"
                 ),
@@ -401,8 +401,8 @@ def render_editorial_morphology(session: dict):
                     "ADVANCE DEBATE STEP →",
                     cls="ed-step-btn",
                     hx_post="/trigger-agent-step",
-                    hx_target="#multimind-morph-target",
-                    hx_swap="outerHTML"
+                    hx_target="#multimind-app-container",
+                    hx_swap="innerHTML"
                 ),
                 cls="ed-top-banner desktop-only"
             ),
@@ -438,8 +438,8 @@ def render_editorial_morphology(session: dict):
                         Input(type="text", name="message", placeholder="Type editorial reflection...", cls="ed-input", required=True),
                         Button("PUBLISH", type="submit", cls="ed-submit"),
                         hx_post="/send-message",
-                        hx_target="#multimind-morph-target",
-                        hx_swap="outerHTML",
+                        hx_target="#multimind-app-container",
+                        hx_swap="innerHTML",
                         cls="ed-form"
                     ),
                     cls="ed-right-column"

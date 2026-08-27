@@ -12,11 +12,24 @@ app, rt = fast_app(
     pico=False,
     hdrs=(
         Link(rel="stylesheet", href="/static/css/global.css", type="text/css"),
-        Meta(name="viewport", content="width=device-width, initial-scale=1, viewport-fit=cover")
+        Meta(name="viewport", content="width=device-width, initial-scale=1, viewport-fit=cover"),
+        Script("""
+            document.addEventListener('htmx:configRequest', function(evt) {
+                const stream = document.querySelector('#mm-msg-container') || document.querySelector('.ed-stream-inner');
+                if (stream) { window._mm_scroll_pos = stream.scrollTop; }
+            });
+            document.addEventListener('htmx:afterSwap', function(evt) {
+                setTimeout(function() {
+                    const stream = document.querySelector('#mm-msg-container') || document.querySelector('.ed-stream-inner');
+                    if (stream && window._mm_scroll_pos !== undefined) {
+                        stream.scrollTop = window._mm_scroll_pos;
+                    }
+                }, 80);
+            });
+        """)
     )
 )
 
-# Global layout shell for reference switcher navigation (Can be bypassed with ?noshell=1 for pure parity evidence)
 def with_shell(content, current_route="/", noshell=False):
     if noshell:
         return content
@@ -50,9 +63,14 @@ def with_shell(content, current_route="/", noshell=False):
         """)
     )
 
+@rt("/multimind")
+def get_multimind(noshell: int = 0):
+    content = Div(render_multimind_app(SESSION_DATA), id="multimind-app-container")
+    return with_shell(content, current_route="/multimind", noshell=bool(noshell))
+
 @rt("/")
 def get_home(noshell: int = 0):
-    return with_shell(render_multimind_app(SESSION_DATA), current_route="/multimind", noshell=bool(noshell))
+    return get_multimind(noshell=noshell)
 
 @rt("/ref/arknights")
 def get_ark(noshell: int = 0):
@@ -74,20 +92,11 @@ def get_dior(noshell: int = 0):
 def get_viensla(noshell: int = 0):
     return with_shell(render_viensla_proof(), current_route="/ref/viensla", noshell=bool(noshell))
 
-@rt("/multimind")
-def get_multimind(noshell: int = 0):
-    inner = Div(render_multimind_app(SESSION_DATA), id="multimind-app-container")
-    if noshell:
-        return Title("MultiMind Benchmark"), inner
-    return with_shell(inner, current_route="/multimind", noshell=False)
-
-# HTMX Mutation Route — Swaps Morphology Live without full page reload or session loss
 @rt("/mutate-presentation", methods=["POST"])
 def post_mutate(to: str = "tactical"):
     SESSION_DATA["active_morphology"] = to
     return render_multimind_app(SESSION_DATA)
 
-# HTMX Agent Step Trigger Route
 @rt("/trigger-agent-step", methods=["POST"])
 def post_agent_step():
     if SESSION_DATA["agents"][1]["status"] == "RUNNING":
@@ -103,7 +112,6 @@ def post_agent_step():
         })
     return render_multimind_app(SESSION_DATA)
 
-# HTMX Chat Message Submit Route
 @rt("/send-message", methods=["POST"])
 def post_message(message: str = ""):
     if message.strip():

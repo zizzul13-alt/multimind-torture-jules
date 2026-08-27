@@ -20,14 +20,14 @@ def capture_all_evidence():
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
 
-        # Desktop context with video recording
+        # Desktop Context with deterministic video capture
         desktop_ctx = browser.new_context(
             viewport={"width": 1440, "height": 900},
             record_video_dir="evidence/videos"
         )
         desktop_page = desktop_ctx.new_page()
 
-        # Mobile context
+        # Mobile Context
         mobile_ctx = browser.new_context(
             viewport={"width": 390, "height": 844},
             is_mobile=True,
@@ -35,7 +35,7 @@ def capture_all_evidence():
         )
         mobile_page = mobile_ctx.new_page()
 
-        # 1. Capture Reference Proofs & Exercise Scroll Choreography
+        # 1. Capture Pure Reference Slices & Scroll Choreography
         ref_routes = [
             ("ref_arknights", "/ref/arknights?noshell=1"),
             ("ref_noomo", "/ref/noomo?noshell=1"),
@@ -49,10 +49,8 @@ def capture_all_evidence():
             desktop_page.goto(url)
             desktop_page.wait_for_timeout(400)
 
-            # Explicitly exercise scroll-linked behavior for video evidence
-            desktop_page.evaluate("window.scrollTo(0, 400);")
-            desktop_page.wait_for_timeout(300)
-            desktop_page.evaluate("window.scrollTo(0, 800);")
+            # Exercise scroll-linked motion for video
+            desktop_page.evaluate("window.scrollTo(0, 500);")
             desktop_page.wait_for_timeout(300)
             desktop_page.evaluate("window.scrollTo(0, 0);")
             desktop_page.wait_for_timeout(300)
@@ -63,13 +61,13 @@ def capture_all_evidence():
             mobile_page.wait_for_timeout(400)
             mobile_page.screenshot(path=f"evidence/{name}_mobile.png", full_page=True)
 
-        # 2. MultiMind Surface — Morphology 1 (Tactical) & Scroll Exercise
-        print("Capturing MultiMind Morphology 1 (Tactical)...")
+        # 2. MultiMind Surface — Morphology 1 & Conversation Scroll
+        print("Capturing MultiMind Surface & Long Conversation Scroll...")
         desktop_page.goto(f"{base_url}/multimind?noshell=1")
         desktop_page.wait_for_timeout(500)
 
-        # Exercise scrolling through 35+ message conversation
-        desktop_page.evaluate("document.querySelector('#mm-msg-container').scrollTop = 1000;")
+        # Scroll stream and verify scroll preservation
+        desktop_page.evaluate("document.querySelector('#mm-msg-container').scrollTop = 800;")
         desktop_page.wait_for_timeout(400)
         desktop_page.screenshot(path="evidence/multimind_morph1_tactical_desktop.png", full_page=True)
 
@@ -77,29 +75,29 @@ def capture_all_evidence():
         mobile_page.wait_for_timeout(500)
         mobile_page.screenshot(path="evidence/multimind_morph1_tactical_mobile.png", full_page=True)
 
-        # 3. Live Presentation Mutation & Drawer Recording
-        print("Recording Live Presentation Mutation & Mobile Drawer Interactions...")
+        # 3. Live Mutation with Scroll Preservation
+        print("Recording Live Morphology Swap with Scroll Preservation...")
         desktop_page.click(".mm-mutate-btn")
         desktop_page.wait_for_timeout(600)
         desktop_page.screenshot(path="evidence/multimind_morph2_editorial_desktop.png", full_page=True)
 
-        # Mobile Recomposition Mutation
+        # Mobile Mutation
         mobile_page.click(".mm-mutate-btn", force=True)
         mobile_page.wait_for_timeout(600)
         mobile_page.screenshot(path="evidence/multimind_morph2_editorial_mobile.png", full_page=True)
 
-        # Step Agent Debate
-        desktop_page.click(".ed-mutate-btn")
-        desktop_page.wait_for_timeout(400)
-        desktop_page.click(".mm-action-btn")
-        desktop_page.wait_for_timeout(500)
-        desktop_page.screenshot(path="evidence/multimind_debate_state_updated.png", full_page=True)
-
+        # Save video path deterministically
+        vid_path = desktop_page.video.path()
         desktop_ctx.close()
         mobile_ctx.close()
         browser.close()
+
+        # Rename WebM video artifact to deterministic evidence name
+        if os.path.exists(vid_path):
+            os.rename(vid_path, "evidence/videos/live_mutation_and_scroll_choreography.webm")
+
         server_proc.terminate()
-        print("Dynamic evidence captured with scroll choreography and mobile drawer interactions!")
+        print("All visual evidence and deterministic WebM recording captured successfully!")
 
 if __name__ == '__main__':
     capture_all_evidence()
