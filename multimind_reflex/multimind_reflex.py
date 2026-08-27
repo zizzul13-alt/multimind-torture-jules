@@ -9,6 +9,7 @@ from multimind_reflex.reference_views import (
 from multimind_reflex.multimind_views import (
     editorial_morphology,
     tactical_morphology,
+    mobile_multimind_view,
 )
 
 def nav_tab_button(label: str, tab_id: str) -> rx.Component:
@@ -56,16 +57,29 @@ def index() -> rx.Component:
             ("ref_b", noomo_reference()),
             ("ref_c", dioriviera_reference()),
             ("ref_d", viensla_reference()),
-            # Default: MultiMind Surface
-            rx.match(
-                MultiMindState.current_morphology,
-                ("tactical", tactical_morphology()),
-                editorial_morphology(),
+            # Default: MultiMind Surface - Mobile vs Desktop purpose-built views
+            rx.box(
+                # Desktop View
+                rx.desktop_only(
+                    rx.match(
+                        MultiMindState.current_morphology,
+                        ("tactical", tactical_morphology()),
+                        editorial_morphology(),
+                    ),
+                    width="100%",
+                ),
+                # Mobile & Tablet Purpose-Built View (HARD GATE)
+                rx.mobile_and_tablet(
+                    mobile_multimind_view(),
+                    width="100%",
+                ),
+                width="100%",
             ),
         ),
 
         # Client-side JavaScript snippet to preserve scroll position across morphology toggles
         rx.script("""
+            window.__page_loaded_timestamp = window.__page_loaded_timestamp || Date.now();
             window.addEventListener('DOMContentLoaded', () => {
                 let currentScroll = 0;
                 document.addEventListener('scroll', (e) => {
