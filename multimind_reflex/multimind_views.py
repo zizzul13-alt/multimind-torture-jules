@@ -73,7 +73,7 @@ def render_message_tactical(msg: Message) -> rx.Component:
         width="100%",
     )
 
-# Morphology A: Editorial / Spatial (Derived from Viens-là & Dioriviera)
+# Desktop Morphology A: Editorial / Spatial
 def editorial_morphology() -> rx.Component:
     return rx.box(
         rx.vstack(
@@ -104,7 +104,7 @@ def editorial_morphology() -> rx.Component:
                 background="#FBF9F5",
             ),
 
-            # Agent Status Rail (Editorial)
+            # Agent Status Rail
             rx.hstack(
                 rx.foreach(
                     MultiMindState.agent_status,
@@ -170,7 +170,7 @@ def editorial_morphology() -> rx.Component:
         id="morphology-editorial",
     )
 
-# Morphology B: Tactical / Layered (Derived from Arknights & Noomo)
+# Desktop Morphology B: Tactical / Layered
 def tactical_morphology() -> rx.Component:
     return rx.box(
         rx.vstack(
@@ -201,7 +201,7 @@ def tactical_morphology() -> rx.Component:
                 background="rgba(10, 15, 26, 0.95)",
             ),
 
-            # Agent Status Rail (Tactical)
+            # Agent Status Rail
             rx.grid(
                 rx.foreach(
                     MultiMindState.agent_status,
@@ -272,73 +272,74 @@ def tactical_morphology() -> rx.Component:
         id="morphology-tactical",
     )
 
-# Mobile Specific View (HARD GATE - Purpose-built Mobile Surface)
-def mobile_multimind_view() -> rx.Component:
+
+# --- PURPOSE-BUILT MOBILE MORPHOLOGIES (HARD GATE) ---
+
+# Mobile Morphology A: Editorial / Spatial
+def mobile_editorial_view() -> rx.Component:
     return rx.box(
         rx.vstack(
-            # Compact Header
+            # Editorial Mobile Header
             rx.hstack(
-                rx.image(src="/branding/multimind_logo.svg", width="32px"),
-                rx.text("MULTIMIND MOBILE", font_weight="bold", font_size="14px", color="#FFF"),
+                rx.image(src="/reference_c/luxury_crest.svg", width="28px"),
+                rx.text("MULTIMIND MAISON", font_family="serif", font_weight="bold", font_size="14px", color="#1A1A1A", letter_spacing="2px"),
                 rx.spacer(),
-                rx.button("SWAP STYLE", on_click=MultiMindState.toggle_morphology, size="1", color_scheme="cyan", id="btn-mobile-toggle"),
+                rx.button("TACTICAL MODE", on_click=MultiMindState.toggle_morphology, size="1", color_scheme="gold", variant="solid", id="btn-mobile-toggle-a"),
                 width="100%",
                 padding="12px 16px",
-                background="#0F172A",
-                border_bottom="1px solid #1E293B",
+                background="#FBF9F5",
+                border_bottom="1px solid #EAE5D9",
             ),
 
-            # Compact Floating Agent Status Drawer/Bar
+            # Floating Circular Status Pill
             rx.box(
                 rx.hstack(
-                    rx.text("AGENTS ACTIVE (4)", font_size="11px", font_family="monospace", color="#38BDF8"),
+                    rx.text("4 AGENTS SYNTHESIZING", font_family="serif", font_size="11px", color="#8C733E", font_style="italic"),
                     rx.spacer(),
-                    rx.badge("SYNTHESIZING", color_scheme="cyan", size="1"),
+                    rx.badge("RUNNING", color_scheme="green", variant="soft", size="1"),
                     width="100%",
                 ),
                 padding="8px 16px",
-                background="#1E293B",
+                background="#FAF8F5",
+                border_bottom="1px solid #E5E0D8",
                 width="100%",
             ),
 
-            # Mobile Conversation Flow
+            # Mobile Conversation Flow (Editorial)
             rx.box(
                 rx.vstack(
                     rx.foreach(
                         MultiMindState.messages,
-                        lambda msg: rx.cond(
-                            MultiMindState.current_morphology == "editorial",
-                            render_message_editorial(msg),
-                            render_message_tactical(msg),
-                        )
+                        render_message_editorial
                     ),
                     width="100%",
                 ),
                 padding="12px",
-                height="70vh",
+                height="68vh",
                 overflow_y="auto",
                 width="100%",
-                id="mobile-scroll-area",
+                id="mobile-scroll-area-a",
             ),
 
-            # Purpose-built Bottom Mobile Command Surface
+            # Floating Rounded Control Surface
             rx.box(
                 rx.hstack(
                     rx.input(
-                        placeholder="Mobile prompt...",
+                        placeholder="Editorial prompt...",
                         value=MultiMindState.new_message_text,
                         on_change=MultiMindState.set_new_message_text,
                         width="100%",
                         size="2",
-                        id="input-mobile-msg",
+                        variant="surface",
+                        id="input-mobile-msg-a",
                     ),
-                    rx.button("SEND", on_click=MultiMindState.send_message, size="2", color_scheme="cyan", id="btn-mobile-send"),
+                    rx.button("SEND", on_click=MultiMindState.send_message, size="2", color_scheme="amber", id="btn-mobile-send-a"),
                     spacing="2",
                     width="100%",
                 ),
-                padding="12px",
-                background="#0F172A",
-                border_top="1px solid #1E293B",
+                padding="12px 16px",
+                background="#FBF9F5",
+                border_top="1px solid #EAE5D9",
                 position="sticky",
                 bottom="0",
                 width="100%",
@@ -348,6 +349,92 @@ def mobile_multimind_view() -> rx.Component:
         ),
         width="100%",
         min_height="100vh",
-        background="#090D16",
-        id="mobile-multimind-surface",
+        background="#FAF8F5",
+        id="mobile-editorial-surface",
+    )
+
+# Mobile Morphology B: Tactical HUD
+def mobile_tactical_view() -> rx.Component:
+    return rx.box(
+        rx.vstack(
+            # Tactical Sci-Fi Mobile Header
+            rx.hstack(
+                rx.image(src="/reference_a/hud_badge.svg", width="80px"),
+                rx.text("PRTS // MOBILE HUD", font_family="monospace", font_weight="bold", font_size="13px", color="#00F0FF"),
+                rx.spacer(),
+                rx.button("EDITORIAL MODE", on_click=MultiMindState.toggle_morphology, size="1", color_scheme="cyan", variant="outline", id="btn-mobile-toggle-b"),
+                width="100%",
+                padding="10px 14px",
+                background="rgba(10, 15, 26, 0.98)",
+                border_bottom="1px solid rgba(0, 240, 255, 0.3)",
+            ),
+
+            # Dense Monospace Status Rail
+            rx.box(
+                rx.hstack(
+                    rx.text("DEBATE CORE: ONLINE", font_family="monospace", font_size="10px", color="#FFB800"),
+                    rx.spacer(),
+                    rx.badge("TACTICAL PASS 04", color_scheme="cyan", size="1"),
+                    width="100%",
+                ),
+                padding="6px 14px",
+                background="#0B0F19",
+                border_bottom="1px solid rgba(75, 85, 99, 0.4)",
+                width="100%",
+            ),
+
+            # Mobile Conversation Flow (Tactical)
+            rx.box(
+                rx.vstack(
+                    rx.foreach(
+                        MultiMindState.messages,
+                        render_message_tactical
+                    ),
+                    width="100%",
+                ),
+                padding="10px",
+                height="68vh",
+                overflow_y="auto",
+                width="100%",
+                id="mobile-scroll-area-b",
+            ),
+
+            # Segmented Mobile Command Console
+            rx.box(
+                rx.hstack(
+                    rx.input(
+                        placeholder="ENTER CMD...",
+                        value=MultiMindState.new_message_text,
+                        on_change=MultiMindState.set_new_message_text,
+                        width="100%",
+                        size="2",
+                        id="input-mobile-msg-b",
+                    ),
+                    rx.button("EXEC", on_click=MultiMindState.send_message, size="2", color_scheme="cyan", id="btn-mobile-send-b"),
+                    spacing="2",
+                    width="100%",
+                ),
+                padding="10px 14px",
+                background="rgba(10, 15, 26, 0.98)",
+                border_top="1px solid rgba(0, 240, 255, 0.3)",
+                position="sticky",
+                bottom="0",
+                width="100%",
+            ),
+            width="100%",
+            spacing="0",
+        ),
+        width="100%",
+        min_height="100vh",
+        background="#0D1117",
+        background_image="url('/textures/grid_pattern.svg')",
+        id="mobile-tactical-surface",
+    )
+
+# Router for Mobile Surface based on state
+def mobile_multimind_view() -> rx.Component:
+    return rx.match(
+        MultiMindState.current_morphology,
+        ("tactical", mobile_tactical_view()),
+        mobile_editorial_view(),
     )

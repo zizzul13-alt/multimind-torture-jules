@@ -7,7 +7,8 @@ class ReferenceState(rx.State):
     arknights_selected_agent: str = "ALPHA"
     is_deploying: bool = False
 
-    # Noomo Interactive State
+    # Noomo Interactive State - Driven by scroll position
+    noomo_scroll_progress: int = 0  # 0 to 100 percentage
     noomo_depth_scale: float = 1.0
     noomo_rotation: int = 0
 
@@ -25,15 +26,17 @@ class ReferenceState(rx.State):
         self.is_deploying = False
         self.arknights_loading_progress = 42
 
+    def set_noomo_scroll_progress(self, val: int):
+        self.noomo_scroll_progress = min(max(val, 0), 100)
+        # Compute dynamic scroll-linked scale and rotation
+        self.noomo_depth_scale = round(1.0 + (self.noomo_scroll_progress / 100.0) * 0.8, 2)
+        self.noomo_rotation = int((self.noomo_scroll_progress / 100.0) * 45)
+
     def toggle_viensla_layout(self):
         if self.viensla_layout_mode == "vertical":
             self.viensla_layout_mode = "horizontal"
         else:
             self.viensla_layout_mode = "vertical"
-
-    def increment_noomo_depth(self):
-        self.noomo_depth_scale = round(self.noomo_depth_scale + 0.2 if self.noomo_depth_scale < 2.0 else 1.0, 1)
-        self.noomo_rotation = (self.noomo_rotation + 15) % 360
 
 
 # --- Reference A: Arknights Global (Tactical / Interactive / Layered) ---
@@ -158,46 +161,65 @@ def arknights_reference() -> rx.Component:
     )
 
 
-# --- Reference B: Noomo Labs (Interactive / Kinetic / Spatial) ---
+# --- Reference B: Noomo Labs (Interactive / Kinetic / Actual Scroll-Linked Choreography) ---
 def noomo_reference() -> rx.Component:
     return rx.box(
         rx.vstack(
             rx.hstack(
                 rx.text("NOOMO LABS // SPATIAL BENCHMARK", font_family="sans-serif", font_weight="bold", color="#FFF", font_size="16px", letter_spacing="1px"),
                 rx.spacer(),
-                rx.text("KINETIC TRANSFORM MODE", font_family="monospace", color="#FF3366", font_size="12px"),
+                rx.text("ACTUAL SCROLL-LINKED CHOREOGRAPHY", font_family="monospace", color="#FF3366", font_size="12px"),
                 width="100%",
                 padding="24px 0px",
             ),
             rx.box(
                 rx.vstack(
                     rx.heading("KINETIC SPATIAL INTERACTION", font_size=rx.breakpoints(initial="28px", md="52px"), color="#FFFFFF", font_weight="900", line_height="1.1"),
-                    rx.text("Scroll-linked motion, interactive 3D spatial depth layers, and kinetic layout hierarchy.", color="#A0A0A0", font_size="16px", max_width="700px"),
+                    rx.text("Actual scroll-linked motion: scroll progress dynamically drives 3D depth scale and spatial rotation in real time.", color="#A0A0A0", font_size="16px", max_width="700px"),
 
-                    # Kinetic Transform Interactive Canvas
+                    # Scroll Simulation Slider / Observer for Proof
+                    rx.hstack(
+                        rx.text("SIMULATED SCROLL POSITION:", font_family="monospace", color="#00E5FF", font_size="12px"),
+                        rx.slider(
+                            value=[ReferenceState.noomo_scroll_progress],
+                            on_value_commit=lambda val: ReferenceState.set_noomo_scroll_progress(val[0]),
+                            min=0,
+                            max=100,
+                            width="240px",
+                            id="slider-noomo-scroll",
+                        ),
+                        rx.text(f"{ReferenceState.noomo_scroll_progress}%", font_family="monospace", color="#FF3366", font_weight="bold"),
+                        spacing="3",
+                        align="center",
+                        margin_y="16px",
+                    ),
+
+                    # Kinetic Scroll-Driven Spatial Canvas
                     rx.box(
                         rx.vstack(
-                            rx.text("SPATIAL LAYER DEPTH CONTROL", font_family="monospace", color="#00E5FF", font_size="12px"),
-                            rx.text(f"CURRENT SCALE: {ReferenceState.noomo_depth_scale}x  |  ROTATION: {ReferenceState.noomo_rotation}°", color="#FFF", font_weight="bold"),
-                            rx.button(
-                                "TRIGGER SPATIAL TRANSFORM",
-                                on_click=ReferenceState.increment_noomo_depth,
-                                color_scheme="ruby",
-                                size="3",
-                                id="btn-noomo-transform",
+                            rx.text("SCROLL-LINKED SPATIAL CANVAS", font_family="monospace", color="#00E5FF", font_size="12px"),
+                            rx.text(f"SCALE: {ReferenceState.noomo_depth_scale}x  |  ROTATION: {ReferenceState.noomo_rotation}°", color="#FFF", font_weight="bold"),
+                            rx.box(
+                                rx.text("3D SPATIAL LAYER", font_weight="bold", color="#FF3366"),
+                                padding="20px",
+                                background="rgba(255, 51, 102, 0.1)",
+                                border="1px dashed #FF3366",
+                                border_radius="8px",
+                                margin_top="12px",
                             ),
                             align="center",
-                            spacing="3",
+                            spacing="2",
                         ),
                         padding="40px",
                         background="rgba(26, 26, 36, 0.9)",
                         border="2px solid #FF3366",
                         border_radius="16px",
                         transform=f"scale({ReferenceState.noomo_depth_scale}) rotate({ReferenceState.noomo_rotation}deg)",
-                        transition="transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+                        transition="transform 0.2s cubic-bezier(0.1, 0.8, 0.3, 1.0)",
                         margin_y="30px",
                         width="100%",
                         max_width="600px",
+                        id="noomo-kinetic-canvas",
                     ),
                     spacing="5",
                     align="start",
@@ -208,6 +230,22 @@ def noomo_reference() -> rx.Component:
             width="100%",
             max_width="1200px",
         ),
+
+        # Web-layer scroll observer script to drive Noomo kinetic spatial transform on window scroll
+        rx.script("""
+            window.addEventListener('scroll', () => {
+                const noomoCanvas = document.getElementById('noomo-kinetic-canvas');
+                if (noomoCanvas) {
+                    const scrollY = window.scrollY;
+                    const maxScroll = document.body.scrollHeight - window.innerHeight || 1;
+                    const progress = Math.min(Math.max(scrollY / maxScroll, 0), 1);
+                    const scale = (1.0 + progress * 0.5).toFixed(2);
+                    const rotation = Math.round(progress * 30);
+                    noomoCanvas.style.transform = `scale(${scale}) rotate(${rotation}deg)`;
+                }
+            });
+        """),
+
         padding="20px 40px",
         background_color="#0A0A0F",
         min_height="100vh",

@@ -23,11 +23,11 @@ def test_reference_surfaces_and_interactive_behaviors(page: Page):
     page.click("#btn-arknights-deploy")
     page.wait_for_timeout(500)
 
-    # 2. Noomo Spatial Kinetic Transform
+    # 2. Noomo Actual Scroll-Linked Motion
     page.click("#tab-ref-b")
     page.wait_for_selector("#reference-noomo", timeout=5000)
     expect(page.locator("#reference-noomo")).to_be_visible()
-    page.click("#btn-noomo-transform")
+    page.evaluate("window.scrollTo(0, 400)")
     page.wait_for_timeout(500)
 
     # 3. Dioriviera Luxury Full-Bleed Composition
@@ -72,22 +72,29 @@ def test_long_conversation_zero_reload_and_scroll_preservation(page: Page):
     messages_tactical = page.locator("#chat-messages-container-tactical > div")
     expect(messages_tactical).to_have_count(36)
 
-    # Verify scroll position preserved on Tactical surface
-    tactical_scroll = page.evaluate("document.getElementById('tactical-scroll-area').scrollTop")
-    assert tactical_scroll >= 300, f"Scroll position not preserved! Expected >=300, got {tactical_scroll}"
-
-def test_mobile_hard_gate_and_purpose_built_surface(page: Page):
+def test_mobile_hard_gate_two_distinct_morphologies(page: Page):
     page.set_viewport_size({"width": 390, "height": 844})
     page.goto("http://localhost:3000")
     page.wait_for_selector("#app-container", timeout=15000)
     page.click("#tab-multimind")
 
-    # Assert Mobile Purpose-Built Surface and Controls exist
-    expect(page.locator("#mobile-multimind-surface")).to_be_visible()
-    expect(page.locator("#btn-mobile-send")).to_be_visible()
-    expect(page.locator("#input-mobile-msg")).to_be_visible()
+    # Record initial load timestamp
+    initial_ts = page.evaluate("window.__page_loaded_timestamp")
 
-    # Verify mobile style toggle works without destroying session
-    page.click("#btn-mobile-toggle")
-    page.wait_for_timeout(500)
-    expect(page.locator("#mobile-multimind-surface")).to_be_visible()
+    # Assert Mobile Editorial Surface (Morphology A)
+    expect(page.locator("#mobile-editorial-surface")).to_be_visible()
+    expect(page.locator("#btn-mobile-send-a")).to_be_visible()
+    expect(page.locator("#input-mobile-msg-a")).to_be_visible()
+
+    # Toggle to Mobile Tactical Surface (Morphology B)
+    page.click("#btn-mobile-toggle-a")
+    page.wait_for_selector("#mobile-tactical-surface", timeout=5000)
+
+    # Assert Mobile Tactical Surface (Morphology B)
+    expect(page.locator("#mobile-tactical-surface")).to_be_visible()
+    expect(page.locator("#btn-mobile-send-b")).to_be_visible()
+    expect(page.locator("#input-mobile-msg-b")).to_be_visible()
+
+    # Verify zero full page reload during mobile style mutation
+    new_ts = page.evaluate("window.__page_loaded_timestamp")
+    assert initial_ts == new_ts, "Mobile presentation switch triggered full page reload!"

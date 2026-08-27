@@ -49,27 +49,32 @@ def capture_all():
         page_mobile.wait_for_selector("#app-container")
         time.sleep(2)
 
-        # 1. Mobile MultiMind
+        # 1. Mobile MultiMind Morphology A
         page_mobile.click("#tab-multimind")
         time.sleep(1)
-        page_mobile.screenshot(path="evidence/mobile_multimind.png")
+        page_mobile.screenshot(path="evidence/mobile_multimind_morphology_a.png")
 
-        # 2. Mobile Reference A
+        # 2. Mobile MultiMind Morphology B
+        page_mobile.click("#btn-mobile-toggle-a")
+        time.sleep(1)
+        page_mobile.screenshot(path="evidence/mobile_multimind_morphology_b.png")
+
+        # 3. Mobile Reference A
         page_mobile.click("#tab-ref-a")
         time.sleep(1)
         page_mobile.screenshot(path="evidence/mobile_reference_a_arknights.png")
 
-        # 3. Mobile Reference B
+        # 4. Mobile Reference B
         page_mobile.click("#tab-ref-b")
         time.sleep(1)
         page_mobile.screenshot(path="evidence/mobile_reference_b_noomo.png")
 
-        # 4. Mobile Reference C
+        # 5. Mobile Reference C
         page_mobile.click("#tab-ref-c")
         time.sleep(1)
         page_mobile.screenshot(path="evidence/mobile_reference_c_dioriviera.png")
 
-        # 5. Mobile Reference D
+        # 6. Mobile Reference D
         page_mobile.click("#tab-ref-d")
         time.sleep(1)
         page_mobile.screenshot(path="evidence/mobile_reference_d_viensla.png")
