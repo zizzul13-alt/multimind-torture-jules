@@ -1,0 +1,6 @@
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1920" height="1080" fill="#0d0d0d"/>
+  <line x1="200" y1="0" x2="200" y2="1080" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+  <line x1="1720" y1="0" x2="1720" y2="1080" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+  <text x="960" y="600" font-family="'Courier New', monospace" font-size="200" font-weight="bold" fill="rgba(255,255,255,0.03)" text-anchor="middle" letter-spacing="-10">VIENS-LÀ</text>
+</svg>
