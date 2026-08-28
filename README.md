@@ -1,27 +1,46 @@
-# MultiMind Platform Torture Test
+# MultiMind Platform Torture Test — SvelteKit + FastAPI (Candidate 3)
 
-Isolated proof-of-concept repository for evaluating potential future
-presentation platforms for MultiMind.
+Isolated proof-of-concept repository evaluating SvelteKit + FastAPI as candidate presentation/backend platform for MultiMind.
 
-This repository is NOT the MultiMind production repository.
+## Startup & Reproduction Instructions
 
-## Purpose
+### 1. Backend Setup & Startup (FastAPI)
+```bash
+# Install backend Python dependencies
+pip install -r backend/requirements.txt
 
-Evaluate candidate platforms against the same visual, interaction,
-responsive, material, and engineering requirements.
+# Run backend tests
+PYTHONPATH=. pytest backend/test_backend.py
 
-Candidates:
+# Start FastAPI backend server (Port 8000)
+PYTHONPATH=. python3 -m uvicorn backend.main:app --port 8000
+```
 
-- FastHTML
-- Reflex
-- SvelteKit + FastAPI
+### 2. Frontend Setup & Startup (SvelteKit)
+```bash
+cd frontend
 
-## Important
+# Install Node dependencies
+npm install
 
-Do not use the existing MultiMind implementation as a visual shortcut.
+# Build production SvelteKit adapter
+npm run build
 
-The benchmark specification in `benchmark-brief.md` is the source of truth.
+# Start SvelteKit dev server (Port 5173)
+npm run dev -- --port 5173
+```
 
-A candidate is not required to win.
+### 3. Automated Playwright Testing
+```bash
+# Run full automated Playwright test suite (Desktop + Mobile 390x844)
+NODE_PATH=node_modules:frontend/node_modules npx playwright test --config=tests/playwright.config.js
+```
 
-`NO_MIGRATION_TARGET_APPROVED` is a valid final outcome.
+### 4. Performance Measurement & Evidence Capture
+```bash
+# Measure initial network transfer, JS/CSS payload, and DOM node counts
+NODE_PATH=node_modules:frontend/node_modules node tests/measure_performance.js
+
+# Capture deterministic screenshots
+NODE_PATH=node_modules:frontend/node_modules node tests/capture_evidence.js
+```

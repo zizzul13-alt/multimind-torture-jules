@@ -33,15 +33,19 @@
     if (scrollContainer) {
       scrollContainer.scrollTop = currentScroll;
     }
+    setTimeout(() => {
+      if (scrollContainer) scrollContainer.scrollTop = currentScroll;
+    }, 50);
   }
 
   async function handleSendMessage() {
     if (!inputMessage.trim() || !session) return;
     const text = inputMessage;
+    const tempId = `msg-temp-${Date.now()}`;
     inputMessage = '';
 
     const tempMsg: Message = {
-      id: `msg-temp-${Date.now()}`,
+      id: tempId,
       sender_id: 'user-01',
       sender_name: session.user_name,
       sender_role: 'user',
@@ -52,16 +56,20 @@
     };
     session.messages = [...session.messages, tempMsg];
 
+    await tick();
+    if (scrollContainer) {
+      scrollContainer.scrollTop = scrollContainer.scrollHeight;
+    }
+
     try {
       const updated = await sendSessionAction('send_message', { text });
       if (updated) session = updated;
     } catch (e) {
-      console.error("Failed sending message", e);
-    }
-
-    await tick();
-    if (scrollContainer) {
-      scrollContainer.scrollTop = scrollContainer.scrollHeight;
+      console.error("Failed sending message, rolling back optimistic message", e);
+      if (session) {
+        session.messages = session.messages.filter(m => m.id !== tempId);
+      }
+      inputMessage = text;
     }
   }
 
@@ -94,154 +102,144 @@
       {/if}
     </div>
 
-    <!-- ========================================================= -->
-    <!-- MORPHOLOGY A: EDITORIAL / SPATIAL NARRATIVE COMPOSITION  -->
-    <!-- ========================================================= -->
-    {#if morphology === 'editorial'}
-      <div class="editorial-layout">
-        <header class="editorial-header">
-          <div class="header-top-bar">
-            <span class="editorial-kicker">MULTIMIND EDITORIAL SURFACES</span>
-            <button class="morph-btn" onclick={toggleMorphology}>
-              ⚡ MUTATE TO TACTICAL MORPHOLOGY
-            </button>
-          </div>
-
-          <h1 class="editorial-title">{session.title}</h1>
-          <p class="editorial-subtitle">Topic: {session.topic} — {session.status} — {session.total_tokens.toLocaleString()} tokens</p>
-        </header>
-
-        <div class="editorial-body-grid">
-          <!-- Floating Sticky Sidebar for Agent Status -->
-          <aside class="editorial-sidebar">
-            <h3 class="sidebar-heading">DEBATING AGENTS</h3>
-            <div class="editorial-agent-list">
-              {#each session.agents as ag}
-                <div class="editorial-agent-item status-{ag.status.toLowerCase()}">
-                  <span class="ag-avatar">{ag.avatar}</span>
-                  <div class="ag-info">
-                    <span class="ag-name">{ag.name}</span>
-                    <span class="ag-role">{ag.role}</span>
-                  </div>
-                  <span class="ag-status-pill">{ag.status}</span>
-                </div>
-              {/each}
-            </div>
-          </aside>
-
-          <!-- Main Editorial Conversation Stream -->
-          <main class="editorial-main-stream">
-            <h2 class="stream-title">CONVERSATION NARRATIVE</h2>
-            <div class="messages-list">
-              {#each session.messages as msg (msg.id)}
-                <article class="editorial-card role-{msg.sender_role}">
-                  <div class="card-meta">
-                    <span class="avatar-circle">{msg.avatar}</span>
-                    <span class="sender-name">{msg.sender_name}</span>
-                    <span class="role-badge">{msg.sender_role}</span>
-                    <span class="time-stamp">{msg.timestamp}</span>
-                  </div>
-                  <div class="card-content">
-                    <p>{msg.content}</p>
-                    {#if msg.thought_process}
-                      <blockquote class="agent-thought-quote">
-                        <span class="quote-label">Internal Trace:</span> {msg.thought_process}
-                      </blockquote>
-                    {/if}
-                    {#if msg.code_snippet}
-                      <pre class="code-box"><code>{msg.code_snippet}</code></pre>
-                    {/if}
-                  </div>
-                </article>
-              {/each}
-            </div>
-
-            <!-- Floating Prompt Input Surface -->
-            <form class="editorial-input-bar" onsubmit={(e) => { e.preventDefault(); handleSendMessage(); }}>
-              <input type="text" bind:value={inputMessage} placeholder="Inject prompt into narrative..." class="edit-input" />
-              <button type="submit" class="edit-send-btn">POST PROMPT</button>
-            </form>
-          </main>
+    <!-- MORPHOLOGY A: EDITORIAL -->
+    <div class="editorial-layout" class:hidden={morphology !== 'editorial'}>
+      <header class="editorial-header">
+        <div class="header-top-bar">
+          <span class="editorial-kicker">MULTIMIND EDITORIAL SURFACES</span>
+          <button class="morph-btn" onclick={toggleMorphology}>
+            ⚡ MUTATE TO TACTICAL MORPHOLOGY
+          </button>
         </div>
-      </div>
-    {/if}
 
-    <!-- ========================================================= -->
-    <!-- MORPHOLOGY B: TACTICAL / DENSE SPLIT TERMINAL HUD         -->
-    <!-- ========================================================= -->
-    {#if morphology === 'tactical'}
-      <div class="tactical-layout">
-        <!-- Top Tactical HUD Command Bar -->
-        <header class="tactical-hud-bar">
-          <div class="hud-left">
-            <span class="hud-tag">[TACTICAL MORPHOLOGY]</span>
-            <span class="hud-session-id">{session.id}</span>
-          </div>
-          <div class="hud-center">
-            <span class="hud-title">{session.title}</span>
-          </div>
-          <div class="hud-right">
-            <span class="hud-tokens">TOKENS: {session.total_tokens}</span>
-            <button class="morph-btn tactical" onclick={toggleMorphology}>
-              ⚡ MUTATE TO EDITORIAL
-            </button>
-          </div>
-        </header>
+        <h1 class="editorial-title">{session.title}</h1>
+        <p class="editorial-subtitle">Topic: {session.topic} — {session.status} — {session.total_tokens.toLocaleString()} tokens</p>
+      </header>
 
-        <!-- Segmented Split Terminal Surface -->
-        <div class="tactical-split-surface">
-          <!-- Top Strip for High-Density Agent Telemetry -->
-          <section class="tactical-telemetry-strip">
+      <div class="editorial-body-grid">
+        <aside class="editorial-sidebar">
+          <h3 class="sidebar-heading">DEBATING AGENTS</h3>
+          <div class="editorial-agent-list">
             {#each session.agents as ag}
-              <div class="telemetry-box">
-                <div class="tel-top">
-                  <span class="tel-avatar">{ag.avatar}</span>
-                  <span class="tel-name">{ag.name}</span>
-                  <span class="tel-status">{ag.status}</span>
+              <div class="editorial-agent-item status-{ag.status.toLowerCase()}">
+                <span class="ag-avatar">{ag.avatar}</span>
+                <div class="ag-info">
+                  <span class="ag-name">{ag.name}</span>
+                  <span class="ag-role">{ag.role}</span>
                 </div>
-                <div class="tel-metrics">
-                  <span>CONF: {(ag.confidence * 100).toFixed(0)}%</span>
-                  <span>MODEL: {ag.model}</span>
+                <span class="ag-status-pill">{ag.status}</span>
+              </div>
+            {/each}
+          </div>
+        </aside>
+
+        <main class="editorial-main-stream">
+          <h2 class="stream-title">CONVERSATION NARRATIVE</h2>
+          <div class="messages-list">
+            {#each session.messages as msg (msg.id)}
+              <article class="editorial-card role-{msg.sender_role}">
+                <div class="card-meta">
+                  <span class="avatar-circle">{msg.avatar}</span>
+                  <span class="sender-name">{msg.sender_name}</span>
+                  <span class="role-badge">{msg.sender_role}</span>
+                  <span class="time-stamp">{msg.timestamp}</span>
+                </div>
+                <div class="card-content">
+                  <p>{msg.content}</p>
+                  {#if msg.thought_process}
+                    <blockquote class="agent-thought-quote">
+                      <span class="quote-label">Internal Trace:</span> {msg.thought_process}
+                    </blockquote>
+                  {/if}
+                  {#if msg.code_snippet}
+                    <pre class="code-box"><code>{msg.code_snippet}</code></pre>
+                  {/if}
+                </div>
+              </article>
+            {/each}
+          </div>
+
+          <form class="editorial-input-bar" onsubmit={(e) => { e.preventDefault(); handleSendMessage(); }}>
+            <input type="text" bind:value={inputMessage} placeholder="Inject prompt into narrative..." class="edit-input" />
+            <button type="submit" class="edit-send-btn">POST PROMPT</button>
+          </form>
+        </main>
+      </div>
+    </div>
+
+    <!-- MORPHOLOGY B: TACTICAL -->
+    <div class="tactical-layout" class:hidden={morphology !== 'tactical'}>
+      <header class="tactical-hud-bar">
+        <div class="hud-left">
+          <span class="hud-tag">[TACTICAL MORPHOLOGY]</span>
+          <span class="hud-session-id">{session.id}</span>
+        </div>
+        <div class="hud-center">
+          <span class="hud-title">{session.title}</span>
+        </div>
+        <div class="hud-right">
+          <span class="hud-tokens">TOKENS: {session.total_tokens}</span>
+          <button class="morph-btn tactical" onclick={toggleMorphology}>
+            ⚡ MUTATE TO EDITORIAL
+          </button>
+        </div>
+      </header>
+
+      <div class="tactical-split-surface">
+        <section class="tactical-telemetry-strip">
+          {#each session.agents as ag}
+            <div class="telemetry-box">
+              <div class="tel-top">
+                <span class="tel-avatar">{ag.avatar}</span>
+                <span class="tel-name">{ag.name}</span>
+                <span class="tel-status">{ag.status}</span>
+              </div>
+              <div class="tel-metrics">
+                <span>CONF: {(ag.confidence * 100).toFixed(0)}%</span>
+                <span>MODEL: {ag.model}</span>
+              </div>
+            </div>
+          {/each}
+        </section>
+
+        <section class="tactical-terminal-stream">
+          <div class="terminal-messages">
+            {#each session.messages as msg (msg.id)}
+              <div class="terminal-row role-{msg.sender_role}">
+                <span class="row-time">[{msg.timestamp}]</span>
+                <span class="row-sender">&lt;{msg.sender_name}&gt;</span>
+                <div class="row-content">
+                  <span>{msg.content}</span>
+                  {#if msg.thought_process}
+                    <div class="term-thought">&gt; THOUGHT: {msg.thought_process}</div>
+                  {/if}
                 </div>
               </div>
             {/each}
-          </section>
+          </div>
 
-          <!-- Main Terminal Conversation Stream -->
-          <section class="tactical-terminal-stream">
-            <div class="terminal-messages">
-              {#each session.messages as msg (msg.id)}
-                <div class="terminal-row role-{msg.sender_role}">
-                  <span class="row-time">[{msg.timestamp}]</span>
-                  <span class="row-sender">&lt;{msg.sender_name}&gt;</span>
-                  <div class="row-content">
-                    <span>{msg.content}</span>
-                    {#if msg.thought_process}
-                      <div class="term-thought">&gt; THOUGHT: {msg.thought_process}</div>
-                    {/if}
-                  </div>
-                </div>
-              {/each}
-            </div>
-
-            <form class="tactical-command-line" onsubmit={(e) => { e.preventDefault(); handleSendMessage(); }}>
-              <span class="prompt-symbol">&gt;&gt;</span>
-              <input type="text" bind:value={inputMessage} placeholder="EXECUTE PROMPT..." class="cmd-input" />
-              <button type="submit" class="cmd-btn">RUN</button>
-            </form>
-          </section>
-        </div>
+          <form class="tactical-command-line" onsubmit={(e) => { e.preventDefault(); handleSendMessage(); }}>
+            <span class="prompt-symbol">&gt;&gt;</span>
+            <input type="text" bind:value={inputMessage} placeholder="EXECUTE PROMPT..." class="cmd-input" />
+            <button type="submit" class="cmd-btn">RUN</button>
+          </form>
+        </section>
       </div>
-    {/if}
+    </div>
   </div>
 {/if}
 
 <style>
   .multimind-app {
-    position: relative;
+    width: 100%;
     min-height: calc(100vh - 50px);
     height: calc(100vh - 50px);
-    overflow-y: auto;
+    overflow-y: scroll;
+    box-sizing: border-box;
+  }
+
+  .hidden {
+    display: none !important;
   }
 
   .bg-material-layer {
@@ -268,7 +266,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: calc(100vh - 50px);
+    height: calc(100vh - 50px);
     background: #0b0f17;
     color: #38bdf8;
     font-family: monospace;
@@ -286,9 +284,7 @@
 
   @keyframes spin { 100% { transform: rotate(360deg); } }
 
-  /* ========================================================= */
-  /* MORPHOLOGY A: EDITORIAL STYLES                             */
-  /* ========================================================= */
+  /* MORPHOLOGY A: EDITORIAL STYLES */
   .editorial-layout {
     position: relative;
     z-index: 10;
@@ -297,6 +293,7 @@
     padding: 2.5rem 2rem;
     font-family: Georgia, 'Times New Roman', serif;
     color: #1e293b;
+    min-height: 2000px;
   }
 
   .editorial-header {
@@ -502,15 +499,14 @@
     cursor: pointer;
   }
 
-  /* ========================================================= */
-  /* MORPHOLOGY B: TACTICAL STYLES                              */
-  /* ========================================================= */
+  /* MORPHOLOGY B: TACTICAL STYLES */
   .tactical-layout {
     position: relative;
     z-index: 10;
     padding: 1rem;
     font-family: 'Courier New', monospace;
     color: #00ffcc;
+    min-height: 2000px;
   }
 
   .tactical-hud-bar {
@@ -617,11 +613,8 @@
     cursor: pointer;
   }
 
-  /* ========================================================= */
-  /* PURPOSE-BUILT MOBILE COMPOSITIONS (390x844 HARD GATE)      */
-  /* ========================================================= */
+  /* MOBILE COMPOSITIONS (390x844 HARD GATE) */
   @media (max-width: 768px) {
-    /* Purpose-built Mobile Editorial Layout */
     .editorial-layout {
       padding: 1rem;
     }
@@ -651,7 +644,6 @@
       padding: 1rem;
     }
 
-    /* Purpose-built Mobile Tactical Layout */
     .tactical-layout {
       padding: 0.5rem;
     }

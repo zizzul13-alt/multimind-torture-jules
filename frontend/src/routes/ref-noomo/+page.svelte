@@ -6,8 +6,12 @@
   let scrollY = $state(0);
 
   function handleMouseMove(e: MouseEvent) {
-    mouseX = (e.clientX / window.innerWidth - 0.5) * 40;
-    mouseY = (e.clientY / window.innerHeight - 0.5) * 40;
+    const target = e.currentTarget as HTMLElement;
+    const rect = target.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    mouseX = Math.round((x / rect.width - 0.5) * 40);
+    mouseY = Math.round((y / rect.height - 0.5) * 40);
   }
 
   function handleScroll(e: Event) {
@@ -16,7 +20,7 @@
   }
 </script>
 
-<div class="noomo-container" onmousemove={handleMouseMove} onscroll={handleScroll}>
+<div class="noomo-container" onmousemove={handleMouseMove} onscroll={handleScroll} role="region" aria-label="Noomo Interactive Workspace">
   <div class="bg-material" style="transform: translate({mouseX * 0.2}px, {mouseY * 0.2}px);">
     <img src="/materials/noomo_bg.svg" alt="Noomo Interactive Spatial Background" class="bg-img" />
   </div>
@@ -26,7 +30,7 @@
 
   <header class="noomo-header">
     <div class="brand-tag">NOOMO LABS / SPATIAL AGENCY</div>
-    <div class="interactive-coord">POS: [{Math.round(mouseX)}, {Math.round(mouseY)}]</div>
+    <div class="interactive-coord">POS: [{mouseX}, {mouseY}]</div>
   </header>
 
   <section class="spatial-hero">

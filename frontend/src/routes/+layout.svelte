@@ -31,7 +31,6 @@
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     background-color: #0b0f17;
     color: #e2e8f0;
-    overflow-x: hidden;
   }
 
   .app-container {
@@ -47,8 +46,7 @@
     padding: 0.75rem 1.5rem;
     background: rgba(15, 23, 42, 0.95);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    position: sticky;
-    top: 0;
+    position: relative;
     z-index: 100;
     backdrop-filter: blur(8px);
   }

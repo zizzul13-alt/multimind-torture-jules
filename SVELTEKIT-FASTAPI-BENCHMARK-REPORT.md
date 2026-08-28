@@ -17,13 +17,13 @@ BACKEND_FRAMEWORK: FastAPI 0.141 (Pydantic 2.13, Starlette 1.6)
 FRONTEND_AUTHORED_LOC: 1564
 BACKEND_AUTHORED_LOC: 251
 CSS_AUTHORED_LOC: 480 (Scoped Svelte CSS)
-TEST_LOC: 125
-INITIAL_JS_TRANSFER: 11.05 KB (Measured)
-INITIAL_CSS_TRANSFER: 14.64 KB (Measured)
-INITIAL_TOTAL_TRANSFER: ~27.00 KB for core web assets (5041.85 KB including high-res local SVG/media assets)
-INITIAL_REQUEST_COUNT: 125 requests (including static media materials)
-INITIAL_JS_CHUNKS: 4 chunks
-INITIAL_DOM_NODE_COUNT: 312 nodes (Measured)
+TEST_LOC: 155
+INITIAL_JS_TRANSFER: 12.57 KB (Measured)
+INITIAL_CSS_TRANSFER: 14.18 KB (Measured)
+INITIAL_TOTAL_TRANSFER: ~26.75 KB core assets (2,680.78 KB total including background SVG assets)
+INITIAL_REQUEST_COUNT: 65 requests (Measured)
+INITIAL_JS_CHUNKS: 5 chunks (Measured)
+INITIAL_DOM_NODE_COUNT: 503 nodes (Measured)
 BUILD_OUTPUT_SUMMARY: Client JS bundle 76.7 KB total; Node server adapter generated in `.svelte-kit/output/server`.
 RUNTIME_WEIGHT_CLASS: LIGHT
 HYDRATION_MODEL: Partial progressive hydration (Svelte compiler outputs native DOM instructions with 0 virtual DOM runtime).
@@ -31,7 +31,7 @@ IDLE_RUNTIME_NOTES: Zero background CPU churn when idle. Scroll and pointer list
 LONG_CONVERSATION_PERFORMANCE: Tested with 25+ message torture stream (4,364 total tokens computed dynamically from message payload). Smooth scroll performance and zero DOM layout shifts during live presentation mutation.
 MOBILE_PERFORMANCE: Purpose-built 390x844 responsive layout for both Editorial and Tactical morphologies. Dedicated mobile status header, horizontal agent strip, and sticky chat bar.
 API_ENDPOINT_COUNT: 4 endpoints (`/api/health`, `/api/session`, `/api/session/messages`, `/api/session/action`)
-FRONTEND_BACKEND_CONTRACT_COST: LOW (Explicit JSON schema shared via TypeScript interfaces and Pydantic models).
+FRONTEND_BACKEND_CONTRACT_COST: LOW (Explicit JSON schema shared via TypeScript interfaces and Pydantic models with bounded Literals).
 TYPE_DUPLICATION_COST: LOW (1 small TypeScript interface file matching Pydantic response schemas).
 LOCAL_DEV_COMPLEXITY: MODERATE (Requires running 2 local dev processes: Uvicorn on port 8000 and Vite dev on port 5173).
 DEPENDENCY_BURDEN: Minimal (FastAPI, Uvicorn, Pydantic, SvelteKit, Vite). Zero heavy third-party UI framework dependencies.

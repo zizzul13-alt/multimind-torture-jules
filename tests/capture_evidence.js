@@ -8,21 +8,27 @@ async function capture() {
   const dPage = await desktopContext.newPage();
 
   await dPage.goto('http://localhost:5173/ref-arknights');
+  await dPage.waitForSelector('h1');
   await dPage.screenshot({ path: 'evidence/ref_arknights_desktop.png' });
 
   await dPage.goto('http://localhost:5173/ref-noomo');
+  await dPage.waitForSelector('h1');
   await dPage.screenshot({ path: 'evidence/ref_noomo_desktop.png' });
 
   await dPage.goto('http://localhost:5173/ref-dioriviera');
+  await dPage.waitForSelector('h1');
   await dPage.screenshot({ path: 'evidence/ref_dioriviera_desktop.png' });
 
   await dPage.goto('http://localhost:5173/ref-viensla');
+  await dPage.waitForSelector('.giant-heading');
   await dPage.screenshot({ path: 'evidence/ref_viensla_desktop.png' });
 
   await dPage.goto('http://localhost:5173/');
+  await dPage.waitForSelector('.multimind-app[data-morphology="editorial"]');
   await dPage.screenshot({ path: 'evidence/multimind_editorial_desktop.png' });
 
-  await dPage.click('.morph-btn');
+  await dPage.locator('.editorial-layout .morph-btn').click();
+  await dPage.waitForSelector('.multimind-app[data-morphology="tactical"]');
   await dPage.waitForTimeout(200);
   await dPage.screenshot({ path: 'evidence/multimind_tactical_desktop.png' });
 
@@ -33,27 +39,33 @@ async function capture() {
   const mPage = await mobileContext.newPage();
 
   await mPage.goto('http://localhost:5173/ref-arknights');
+  await mPage.waitForSelector('h1');
   await mPage.screenshot({ path: 'evidence/ref_arknights_mobile.png' });
 
   await mPage.goto('http://localhost:5173/ref-noomo');
+  await mPage.waitForSelector('h1');
   await mPage.screenshot({ path: 'evidence/ref_noomo_mobile.png' });
 
   await mPage.goto('http://localhost:5173/ref-dioriviera');
+  await mPage.waitForSelector('h1');
   await mPage.screenshot({ path: 'evidence/ref_dioriviera_mobile.png' });
 
   await mPage.goto('http://localhost:5173/ref-viensla');
+  await mPage.waitForSelector('.giant-heading');
   await mPage.screenshot({ path: 'evidence/ref_viensla_mobile.png' });
 
   await mPage.goto('http://localhost:5173/');
+  await mPage.waitForSelector('.multimind-app[data-morphology="editorial"]');
   await mPage.screenshot({ path: 'evidence/multimind_editorial_mobile.png' });
 
-  await mPage.click('.morph-btn');
+  await mPage.locator('.editorial-layout .morph-btn').click();
+  await mPage.waitForSelector('.multimind-app[data-morphology="tactical"]');
   await mPage.waitForTimeout(200);
   await mPage.screenshot({ path: 'evidence/multimind_tactical_mobile.png' });
 
   await mobileContext.close();
   await browser.close();
-  console.log('EVIDENCE SCREENSHOTS REGENERATED SUCCESSFULLY');
+  console.log('EVIDENCE SCREENSHOTS REGENERATED WITH STRICT VISIBILITY WAITS');
 }
 
 capture().catch(console.error);
