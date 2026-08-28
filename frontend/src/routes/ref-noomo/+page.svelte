@@ -20,7 +20,15 @@
   }
 </script>
 
-<div class="noomo-container" onmousemove={handleMouseMove} onscroll={handleScroll} role="region" aria-label="Noomo Interactive Workspace">
+<div
+  class="noomo-container"
+  onmousemove={handleMouseMove}
+  onscroll={handleScroll}
+  role="region"
+  aria-label="Noomo Interactive Workspace"
+  data-mouse-x={mouseX}
+  data-mouse-y={mouseY}
+>
   <div class="bg-material" style="transform: translate({mouseX * 0.2}px, {mouseY * 0.2}px);">
     <img src="/materials/noomo_bg.svg" alt="Noomo Interactive Spatial Background" class="bg-img" />
   </div>
@@ -140,7 +148,7 @@
   h1 {
     font-size: 4.5rem;
     font-weight: 900;
-    line-height: 1.05;
+    line-height: 0.95;
     margin: 0;
     letter-spacing: -0.03em;
     transition: transform 0.1s ease-out;

@@ -9,6 +9,7 @@
   let scrollContainer = $state<HTMLDivElement | null>(null);
   let savedScrollTop = $state(0);
   let scrollY = $state(0);
+  let isMutating = $state(false);
   let inputMessage = $state('');
 
   onMount(async () => {
@@ -22,19 +23,23 @@
   });
 
   async function toggleMorphology() {
+    isMutating = true;
+    const targetScroll = (scrollContainer && scrollContainer.scrollTop > 0) ? scrollContainer.scrollTop : savedScrollTop;
     const nextMorph = morphology === 'editorial' ? 'tactical' : 'editorial';
-    const currentScroll = scrollContainer ? scrollContainer.scrollTop : savedScrollTop;
-    savedScrollTop = currentScroll;
 
     // Pure frontend morphology mutation
     morphology = nextMorph;
 
     await tick();
     if (scrollContainer) {
-      scrollContainer.scrollTop = currentScroll;
+      scrollContainer.scrollTop = targetScroll;
     }
+    requestAnimationFrame(() => {
+      if (scrollContainer) scrollContainer.scrollTop = targetScroll;
+    });
     setTimeout(() => {
-      if (scrollContainer) scrollContainer.scrollTop = currentScroll;
+      if (scrollContainer) scrollContainer.scrollTop = targetScroll;
+      isMutating = false;
     }, 50);
   }
 
@@ -74,9 +79,12 @@
   }
 
   function handleScroll(e: Event) {
+    if (isMutating) return;
     const target = e.target as HTMLDivElement;
-    scrollY = target.scrollTop;
-    savedScrollTop = target.scrollTop;
+    if (target.scrollTop > 0) {
+      scrollY = target.scrollTop;
+      savedScrollTop = target.scrollTop;
+    }
   }
 </script>
 

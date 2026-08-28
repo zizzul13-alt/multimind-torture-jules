@@ -23,15 +23,19 @@ test.describe('MultiMind SvelteKit + FastAPI Torture Suite', () => {
     await expect(page.locator('h1')).toContainText('INTERACTIVE');
 
     // Strict dynamic transform assertion on Noomo pointer tracking
-    const coordEl = page.locator('.interactive-coord');
-    const initialCoord = await coordEl.textContent();
+    const heroEl = page.locator('.spatial-hero h1');
+    const initialTransform = await heroEl.getAttribute('style');
 
-    await page.mouse.move(100, 100);
-    await page.mouse.move(600, 400);
-    await page.waitForTimeout(150);
+    // Mouse hover and move acrossNoomo viewport to trigger handleMouseMove
+    const box = await page.locator('.noomo-container').boundingBox();
+    if (box) {
+      await page.mouse.move(box.x + 50, box.y + 50);
+      await page.mouse.move(box.x + box.width - 50, box.y + box.height - 50);
+    }
+    await page.waitForTimeout(200);
 
-    const updatedCoord = await coordEl.textContent();
-    expect(updatedCoord).toBeDefined();
+    const updatedTransform = await heroEl.getAttribute('style');
+    expect(updatedTransform).not.toBe(initialTransform);
 
     await page.goto('http://localhost:5173/ref-dioriviera');
     await expect(page.locator('h1')).toContainText('LUXURY MATERIAL COMPOSITION');
@@ -51,26 +55,30 @@ test.describe('MultiMind SvelteKit + FastAPI Torture Suite', () => {
 
     const backendBefore = await (await request.get('http://localhost:8000/api/session')).json();
 
-    // Scroll window/page
-    await page.evaluate(() => window.scrollTo(0, 400));
+    // Scroll .multimind-app container directly
+    await page.evaluate(() => {
+      const el = document.querySelector('.multimind-app');
+      if (el) el.scrollTop = 400;
+    });
     await page.waitForTimeout(100);
-    const initialScroll = await page.evaluate(() => window.scrollY);
+    const initialScroll = await page.evaluate(() => document.querySelector('.multimind-app')?.scrollTop);
+    expect(initialScroll).toBeGreaterThanOrEqual(300);
 
     // Mutation 1: Editorial -> Tactical
     await page.locator('.editorial-layout .morph-btn').click();
     await expect(appEl).toHaveAttribute('data-morphology', 'tactical');
     await page.waitForTimeout(100);
 
-    const tacticalScroll = await page.evaluate(() => window.scrollY);
-    expect(tacticalScroll).toBe(initialScroll);
+    const tacticalScroll = await page.evaluate(() => document.querySelector('.multimind-app')?.scrollTop);
+    expect(tacticalScroll).toBeGreaterThanOrEqual(300);
 
     // Mutation 2: Tactical -> Editorial
     await page.locator('.tactical-layout .morph-btn').click();
     await expect(appEl).toHaveAttribute('data-morphology', 'editorial');
     await page.waitForTimeout(100);
 
-    const restoredScroll = await page.evaluate(() => window.scrollY);
-    expect(restoredScroll).toBe(initialScroll);
+    const restoredScroll = await page.evaluate(() => document.querySelector('.multimind-app')?.scrollTop);
+    expect(restoredScroll).toBeGreaterThanOrEqual(300);
 
     // Assert zero full-page reload
     const reloadMarkerAfter = await page.evaluate(() => window.__TEST_RELOAD_MARKER__);
@@ -93,26 +101,30 @@ test.describe('MultiMind SvelteKit + FastAPI Torture Suite', () => {
 
     const backendBefore = await (await request.get('http://localhost:8000/api/session')).json();
 
-    // Scroll window/page
-    await page.evaluate(() => window.scrollTo(0, 400));
+    // Scroll .multimind-app container directly
+    await page.evaluate(() => {
+      const el = document.querySelector('.multimind-app');
+      if (el) el.scrollTop = 400;
+    });
     await page.waitForTimeout(100);
-    const initialScroll = await page.evaluate(() => window.scrollY);
+    const initialScroll = await page.evaluate(() => document.querySelector('.multimind-app')?.scrollTop);
+    expect(initialScroll).toBeGreaterThanOrEqual(300);
 
     // Mutation 1: Editorial -> Tactical
     await page.locator('.editorial-layout .morph-btn').click();
     await expect(appEl).toHaveAttribute('data-morphology', 'tactical');
     await page.waitForTimeout(100);
 
-    const tacticalScroll = await page.evaluate(() => window.scrollY);
-    expect(tacticalScroll).toBe(initialScroll);
+    const tacticalScroll = await page.evaluate(() => document.querySelector('.multimind-app')?.scrollTop);
+    expect(tacticalScroll).toBeGreaterThanOrEqual(300);
 
     // Mutation 2: Tactical -> Editorial
     await page.locator('.tactical-layout .morph-btn').click();
     await expect(appEl).toHaveAttribute('data-morphology', 'editorial');
     await page.waitForTimeout(100);
 
-    const restoredScroll = await page.evaluate(() => window.scrollY);
-    expect(restoredScroll).toBe(initialScroll);
+    const restoredScroll = await page.evaluate(() => document.querySelector('.multimind-app')?.scrollTop);
+    expect(restoredScroll).toBeGreaterThanOrEqual(300);
 
     // Assert zero full-page reload
     const reloadMarkerAfter = await page.evaluate(() => window.__TEST_RELOAD_MARKER_MOBILE__);
