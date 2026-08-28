@@ -1,0 +1,6 @@
+.web/
+.states/
+__pycache__/
+*.log
+*.pyc
+.pytest_cache/
