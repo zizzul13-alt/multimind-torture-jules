@@ -1,0 +1,15 @@
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="dior-bg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#faf8f5"/>
+      <stop offset="100%" stop-color="#f0ece1"/>
+    </linearGradient>
+    <pattern id="toile" width="120" height="120" patternUnits="userSpaceOnUse">
+      <path d="M 10,10 Q 30,50 60,20 T 110,60" fill="none" stroke="rgba(160, 140, 110, 0.12)" stroke-width="1.5"/>
+      <circle cx="90" cy="90" r="15" fill="none" stroke="rgba(160, 140, 110, 0.15)" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="1920" height="1080" fill="url(#dior-bg)"/>
+  <rect width="1920" height="1080" fill="url(#toile)"/>
+  <text x="960" y="580" font-family="'Times New Roman', serif" font-size="140" fill="rgba(140,120,90,0.05)" text-anchor="middle" letter-spacing="25">DIORIVIERA</text>
+</svg>
