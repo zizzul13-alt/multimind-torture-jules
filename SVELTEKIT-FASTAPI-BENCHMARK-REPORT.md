@@ -17,18 +17,19 @@ BACKEND_FRAMEWORK: FastAPI 0.141 (Pydantic 2.13, Starlette 1.6)
 FRONTEND_AUTHORED_LOC: 1564
 BACKEND_AUTHORED_LOC: 251
 CSS_AUTHORED_LOC: 480 (Scoped Svelte CSS)
-TEST_LOC: 109
-INITIAL_JS_TRANSFER: 76.7 KB (Gzip: 27.9 KB)
-INITIAL_CSS_TRANSFER: 19.3 KB (Gzip: 5.8 KB)
-INITIAL_TOTAL_TRANSFER: ~96.0 KB
-INITIAL_REQUEST_COUNT: 8 requests
+TEST_LOC: 125
+INITIAL_JS_TRANSFER: 11.05 KB (Measured)
+INITIAL_CSS_TRANSFER: 14.64 KB (Measured)
+INITIAL_TOTAL_TRANSFER: ~27.00 KB for core web assets (5041.85 KB including high-res local SVG/media assets)
+INITIAL_REQUEST_COUNT: 125 requests (including static media materials)
 INITIAL_JS_CHUNKS: 4 chunks
+INITIAL_DOM_NODE_COUNT: 312 nodes (Measured)
 BUILD_OUTPUT_SUMMARY: Client JS bundle 76.7 KB total; Node server adapter generated in `.svelte-kit/output/server`.
 RUNTIME_WEIGHT_CLASS: LIGHT
 HYDRATION_MODEL: Partial progressive hydration (Svelte compiler outputs native DOM instructions with 0 virtual DOM runtime).
 IDLE_RUNTIME_NOTES: Zero background CPU churn when idle. Scroll and pointer listeners attached via standard requestAnimationFrame and native event loops.
-LONG_CONVERSATION_PERFORMANCE: Tested with 25+ message torture stream (42,450 tokens total). 60 FPS scroll performance, zero DOM layout shifts during live presentation mutation.
-MOBILE_PERFORMANCE: Purpose-built 390x844 responsive layout for both Editorial and Tactical morphologies. Excellent touch readability and sticky chat input bar.
+LONG_CONVERSATION_PERFORMANCE: Tested with 25+ message torture stream (4,364 total tokens computed dynamically from message payload). Smooth scroll performance and zero DOM layout shifts during live presentation mutation.
+MOBILE_PERFORMANCE: Purpose-built 390x844 responsive layout for both Editorial and Tactical morphologies. Dedicated mobile status header, horizontal agent strip, and sticky chat bar.
 API_ENDPOINT_COUNT: 4 endpoints (`/api/health`, `/api/session`, `/api/session/messages`, `/api/session/action`)
 FRONTEND_BACKEND_CONTRACT_COST: LOW (Explicit JSON schema shared via TypeScript interfaces and Pydantic models).
 TYPE_DUPLICATION_COST: LOW (1 small TypeScript interface file matching Pydantic response schemas).
@@ -38,7 +39,7 @@ CUSTOM_ANIMATION_LIBRARY: NONE (Native CSS transforms, transitions, and Svelte s
 CUSTOM_UI_LIBRARY: NONE (100% bespoke art-directed design).
 ABSTRACTION_SURVIVAL_PERCENT: 100% (JavaScript and CSS are native to SvelteKit; zero escape hatches needed).
 APPROX_IMPLEMENTATION_COST: ~4 hours engineering cost.
-FINAL_VERDICT: MAGNUM_OPUS
+FINAL_VERDICT: EXCELLENT
 
 ---
 
@@ -46,21 +47,21 @@ FINAL_VERDICT: MAGNUM_OPUS
 
 | Benchmark Category | Score | Notes |
 | :--- | :---: | :--- |
-| **Reference Parity** | **10** | Achieved full reference parity for Arknights, Noomo, Dioriviera, and Viens-là. |
+| **Reference Parity** | **9** | Achieved strong reference parity for Arknights, Noomo, Dioriviera, and Viens-là. |
 | **Visual Entropy** | **10** | Zero framework component visual signature. Completely unique visual identities across reference slices. |
 | **Material Freedom** | **10** | SVG background layers, textures, and geometric masks used compositionally. |
 | **Material-over-Code** | **10** | Reused SVG background assets instead of heavy custom JS canvas animation engines. |
-| **Panel / Morphology** | **10** | Implemented 2 radically different presentation morphologies (Editorial/Spatial vs. Tactical/Dense). |
-| **Typography Control** | **10** | Full variable scale (Rajdhani, Times/Georgia serif, Courier monospace, Space Grotesk). |
-| **Readability** | **10** | Outstanding message legibility even across long multi-turn torture conversations. |
-| **Mobile Recomposition** | **10** | Tested at 390x844. Dedicated mobile status header, vertical agent stacked grid, and sticky chat bar. |
+| **Panel / Morphology** | **9** | Implemented 2 structurally distinct presentation morphologies (Editorial vs. Tactical). |
+| **Typography Control** | **9** | Full variable scale (Rajdhani, Times/Georgia serif, Courier monospace, Space Grotesk). |
+| **Readability** | **9** | Outstanding message legibility even across long multi-turn torture conversations. |
+| **Mobile Recomposition** | **9** | Tested at 390x844. Purpose-built mobile status header, horizontal agent scroll, and sticky prompt bar. |
 | **Live Mutation** | **10** | Live A <-> B morphology switching with state and scroll position preservation and ZERO full-page reload. |
-| **Scroll / Motion** | **10** | Parallax scroll-linked HUD transforms and cursor 3D rotation. |
-| **Interactive Loading** | **10** | Branded MultiMind initialization loader with animated pulse rings. |
+| **Scroll / Motion** | **9** | Parallax scroll-linked HUD transforms and dynamic cursor tracking. |
+| **Interactive Loading** | **9** | Branded MultiMind initialization loader with animated pulse rings. |
 | **Framework Fingerprint** | **10** | Completely clean of generic admin templates or library fingerprints. |
 | **Abstraction Survival** | **10** | Native web stack; zero escape hatches or hacky DOM patches. |
 | **Engineering Burden** | **8** | Split dev process (FastAPI + SvelteKit) requires CORS and separate servers. |
-| **Maintainability** | **10** | Clean decoupling of backend application state and frontend presentation components. |
+| **Maintainability** | **9** | Clean decoupling of backend application state and frontend presentation components. |
 
 ---
 
@@ -79,8 +80,6 @@ FINAL_VERDICT: MAGNUM_OPUS
 
 ## Full-Stack Ceiling & Migration Verdict
 
-**SvelteKit + FastAPI** proves to be the definitive full-stack migration candidate for MultiMind.
+**SvelteKit + FastAPI** provides high visual ceiling, native web standard flexibility, and clean separation between backend application truth and frontend presentation state.
 
-By leveraging native web standards (CSS transforms, Svelte signals/state, SVG materials) and delegating backend state validation to FastAPI and Pydantic, Candidate 3 provides **unrestricted visual and interaction freedom** while keeping initial page payloads under **100 KB total**.
-
-`FINAL_VERDICT: MAGNUM_OPUS`
+`FINAL_VERDICT: EXCELLENT`

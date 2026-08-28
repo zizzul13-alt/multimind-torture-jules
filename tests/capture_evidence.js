@@ -53,7 +53,7 @@ async function capture() {
 
   await mobileContext.close();
   await browser.close();
-  console.log('EVIDENCE SCREENSHOTS CAPTURED SUCCESSFULLY');
+  console.log('EVIDENCE SCREENSHOTS REGENERATED SUCCESSFULLY');
 }
 
 capture().catch(console.error);

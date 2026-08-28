@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Response
+from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from backend.models import Session, AgentStatus, Message, ActionRequest, ActionResponse
 from typing import List
@@ -13,7 +13,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mock initial session state with long conversation messages
 def generate_mock_session() -> Session:
     agents = [
         AgentStatus(
@@ -51,67 +50,56 @@ def generate_mock_session() -> Session:
         )
     ]
 
-    # Generate multi-turn long conversation
-    messages = []
+    messages = [
+        Message(
+            id="msg-001",
+            sender_id="user-01",
+            sender_name="Jules Lead",
+            sender_role="user",
+            avatar="👤",
+            content="Welcome team. We are conducting the MultiMind Torture Benchmark evaluating SvelteKit + FastAPI vs Python-first frameworks. Please present your preliminary architecture assessments.",
+            timestamp="10:00:15",
+            tokens=34
+        ),
+        Message(
+            id="msg-002",
+            sender_id="agent-arch",
+            sender_name="Architect-Prime",
+            sender_role="agent",
+            avatar="🏛️",
+            content="Initial telemetry indicates SvelteKit provides standard DOM ownership while FastAPI handles structured validation with Pydantic. Presentation logic is completely decoupled from backend Python models.",
+            timestamp="10:00:42",
+            thought_process="Analysis complete: Zero python-to-JS compilation escape hatches required for core DOM manipulation.",
+            code_snippet="// SvelteKit state contract\nexport let sessionState = writable<SessionData>();",
+            tokens=180,
+            agent_status="RUNNING"
+        ),
+        Message(
+            id="msg-003",
+            sender_id="agent-sec",
+            sender_name="Sentinel-Sec",
+            sender_role="agent",
+            avatar="🛡️",
+            content="The security boundary is strictly enforced via FastAPI OpenAPI definitions. The SvelteKit frontend consumes typed JSON payloads without ambient server session leakages.",
+            timestamp="10:01:10",
+            thought_process="CORS verification completed across standard dev ports.",
+            tokens=120,
+            agent_status="ACTIVE"
+        ),
+        Message(
+            id="msg-004",
+            sender_id="agent-perf",
+            sender_name="Hyper-V",
+            sender_role="agent",
+            avatar="⚡",
+            content="Performance audit update: Svelte compiler output contains zero heavy virtual-DOM runtime overhead. Page load initial JS stays lightweight while preserving smooth presentation switching.",
+            timestamp="10:01:45",
+            thought_process="Hydrated bundle benchmark target: < 150KB total payload.",
+            tokens=145,
+            agent_status="WAITING"
+        )
+    ]
 
-    # Message 1
-    messages.append(Message(
-        id="msg-001",
-        sender_id="user-01",
-        sender_name="Jules Lead",
-        sender_role="user",
-        avatar="👤",
-        content="Welcome team. We are conducting the MultiMind Torture Benchmark evaluating SvelteKit + FastAPI vs Python-first frameworks. Please present your preliminary architecture assessments.",
-        timestamp="10:00:15",
-        tokens=34
-    ))
-
-    # Message 2
-    messages.append(Message(
-        id="msg-002",
-        sender_id="agent-arch",
-        sender_name="Architect-Prime",
-        sender_role="agent",
-        avatar="🏛️",
-        content="Initial telemetry indicates SvelteKit provides standard DOM ownership while FastAPI handles structured validation with Pydantic. Unlike Reflex or FastHTML, presentation logic is completely decoupled from backend Python models.",
-        timestamp="10:00:42",
-        thought_process="Analysis complete: Zero python-to-JS compilation escape hatches required for core DOM manipulation.",
-        code_snippet="""// SvelteKit state contract
-export let sessionState = writable<SessionData>();
-""",
-        tokens=180,
-        agent_status="RUNNING"
-    ))
-
-    # Message 3
-    messages.append(Message(
-        id="msg-003",
-        sender_id="agent-sec",
-        sender_name="Sentinel-Sec",
-        sender_role="agent",
-        avatar="🛡️",
-        content="The security boundary is strictly enforced via FastAPI OpenAPI definitions. The SvelteKit frontend consumes typed JSON payloads without ambient server session leakages.",
-        timestamp="10:01:10",
-        thought_process="CORS verification completed across standard dev ports.",
-        tokens=120,
-        agent_status="ACTIVE"
-    ))
-
-    # Message 4
-    messages.append(Message(
-        id="msg-004",
-        sender_id="agent-perf",
-        sender_name="Hyper-V",
-        sender_role="agent",
-        avatar="⚡",
-        content="Performance audit update: Svelte compiler output contains zero heavy virtual-DOM runtime overhead. Page load initial JS stays lightweight while preserving smooth 60fps presentation switching.",
-        timestamp="10:01:45",
-        thought_process="Hydrated bundle benchmark target: < 150KB total payload.",
-        tokens=145,
-        agent_status="WAITING"
-    ))
-
-    # Generate 20 additional long conversation entries for torture testing
     for i in range(5, 26):
         agent_idx = (i % 3)
         ag = agents[agent_idx]
@@ -128,14 +116,15 @@ export let sessionState = writable<SessionData>();
             agent_status=ag.status
         ))
 
+    calculated_total_tokens = sum(m.tokens for m in messages)
+
     return Session(
         id="session-multimind-torture-01",
         title="Candidate 3 — SvelteKit + FastAPI Architecture Benchmark",
         topic="Full-Stack Ceiling & Performance Evaluation",
         created_at="2025-08-28 10:00:00",
         status="ACTIVE_DEBATE",
-        total_tokens=42450,
-        active_morphology="editorial",
+        total_tokens=calculated_total_tokens,
         user_name="Jules Lead",
         user_avatar="👤",
         agents=agents,
@@ -144,12 +133,16 @@ export let sessionState = writable<SessionData>();
 
 CURRENT_SESSION = generate_mock_session()
 
+def recalculate_tokens():
+    CURRENT_SESSION.total_tokens = sum(m.tokens for m in CURRENT_SESSION.messages)
+
 @app.get("/api/health")
 def get_health():
     return {"status": "ok", "backend": "FastAPI", "version": "1.0.0"}
 
 @app.get("/api/session", response_model=Session)
 def get_session():
+    recalculate_tokens()
     return CURRENT_SESSION
 
 @app.get("/api/session/messages", response_model=List[Message])
@@ -163,41 +156,54 @@ def get_agents():
 @app.post("/api/session/action", response_model=ActionResponse)
 def handle_action(req: ActionRequest):
     global CURRENT_SESSION
-    if req.action_type == "change_morphology":
-        new_morph = req.payload.get("morphology", "editorial") if req.payload else "editorial"
-        CURRENT_SESSION.active_morphology = new_morph
+    allowed_actions = ["send_message", "trigger_debate", "reset_session"]
+    if req.action_type not in allowed_actions:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Unsupported action type '{req.action_type}'. Supported actions: {allowed_actions}"
+        )
+
+    if req.action_type == "send_message":
+        text = req.payload.get("text", "") if req.payload else ""
+        if not text:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Action 'send_message' requires a non-empty 'text' in payload."
+            )
+        new_msg = Message(
+            id=f"msg-{len(CURRENT_SESSION.messages)+1:03d}",
+            sender_id="user-01",
+            sender_name="Jules Lead",
+            sender_role="user",
+            avatar="👤",
+            content=text,
+            timestamp="10:30:00",
+            tokens=len(text) // 4 + 5
+        )
+        CURRENT_SESSION.messages.append(new_msg)
+        recalculate_tokens()
         return ActionResponse(
             success=True,
-            message=f"Morphology updated to {new_morph}",
+            message="Message added successfully",
             updated_session=CURRENT_SESSION
         )
-    elif req.action_type == "send_message":
-        text = req.payload.get("text", "") if req.payload else ""
-        if text:
-            new_msg = Message(
-                id=f"msg-{len(CURRENT_SESSION.messages)+1:03d}",
-                sender_id="user-01",
-                sender_name="Jules Lead",
-                sender_role="user",
-                avatar="👤",
-                content=text,
-                timestamp="10:30:00",
-                tokens=len(text) // 4 + 5
-            )
-            CURRENT_SESSION.messages.append(new_msg)
-            return ActionResponse(
-                success=True,
-                message="Message added successfully",
-                updated_session=CURRENT_SESSION
-            )
+
     elif req.action_type == "trigger_debate":
-        # Simulate active agent debate update
         for ag in CURRENT_SESSION.agents:
             ag.tokens_used += 120
+        recalculate_tokens()
         return ActionResponse(
             success=True,
             message="Debate round triggered across active agents",
             updated_session=CURRENT_SESSION
         )
 
-    return ActionResponse(success=True, message="Action processed", updated_session=CURRENT_SESSION)
+    elif req.action_type == "reset_session":
+        CURRENT_SESSION = generate_mock_session()
+        return ActionResponse(
+            success=True,
+            message="Session reset to initial mock state",
+            updated_session=CURRENT_SESSION
+        )
+
+    raise HTTPException(status_code=400, detail="Invalid action request")

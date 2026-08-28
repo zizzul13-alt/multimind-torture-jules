@@ -3,7 +3,7 @@ export interface AgentStatus {
     name: string;
     role: string;
     avatar: string;
-    status: string; // "ACTIVE", "WAITING", "RUNNING", "PENDING", "THINKING", "COMPLETED"
+    status: "ACTIVE" | "WAITING" | "RUNNING" | "PENDING" | "THINKING" | "COMPLETED";
     model: string;
     tokens_used: number;
     confidence: number;
@@ -14,7 +14,7 @@ export interface Message {
     id: string;
     sender_id: string;
     sender_name: string;
-    sender_role: string; // "user" | "assistant" | "agent" | "system"
+    sender_role: "user" | "assistant" | "agent" | "system";
     avatar: string;
     content: string;
     timestamp: string;
@@ -29,9 +29,8 @@ export interface Session {
     title: string;
     topic: string;
     created_at: string;
-    status: string;
+    status: "ACTIVE_DEBATE" | "PAUSED" | "COMPLETED";
     total_tokens: number;
-    active_morphology: 'editorial' | 'tactical';
     user_name: string;
     user_avatar: string;
     agents: AgentStatus[];

@@ -7,13 +7,13 @@
   let morphology = $state<'editorial' | 'tactical'>('editorial');
   let loading = $state(true);
   let scrollContainer = $state<HTMLDivElement | null>(null);
+  let savedScrollTop = $state(0);
   let scrollY = $state(0);
   let inputMessage = $state('');
 
   onMount(async () => {
     try {
       session = await fetchSession();
-      morphology = session.active_morphology || 'editorial';
     } catch (e) {
       console.error("Failed to load session from FastAPI", e);
     } finally {
@@ -23,23 +23,15 @@
 
   async function toggleMorphology() {
     const nextMorph = morphology === 'editorial' ? 'tactical' : 'editorial';
-    const currentScroll = scrollContainer ? scrollContainer.scrollTop : 0;
+    const currentScroll = scrollContainer ? scrollContainer.scrollTop : savedScrollTop;
+    savedScrollTop = currentScroll;
 
-    // Update local state and backend state asynchronously without page refresh
+    // Pure frontend morphology mutation
     morphology = nextMorph;
 
-    // Preserve scroll position deterministically after DOM updates
     await tick();
-    setTimeout(() => {
-      if (scrollContainer) {
-        scrollContainer.scrollTop = currentScroll;
-      }
-    }, 50);
-
-    try {
-      await sendSessionAction('change_morphology', { morphology: nextMorph });
-    } catch (e) {
-      console.error("Failed sync action", e);
+    if (scrollContainer) {
+      scrollContainer.scrollTop = currentScroll;
     }
   }
 
@@ -48,7 +40,6 @@
     const text = inputMessage;
     inputMessage = '';
 
-    // Optimistic UI append
     const tempMsg: Message = {
       id: `msg-temp-${Date.now()}`,
       sender_id: 'user-01',
@@ -77,6 +68,7 @@
   function handleScroll(e: Event) {
     const target = e.target as HTMLDivElement;
     scrollY = target.scrollTop;
+    savedScrollTop = target.scrollTop;
   }
 </script>
 
@@ -102,110 +94,154 @@
       {/if}
     </div>
 
-    <!-- MultiMind Header & Control Bar -->
-    <header class="app-header">
-      <div class="session-meta">
-        <span class="morphology-badge">{morphology.toUpperCase()} MORPHOLOGY</span>
-        <h1 class="session-title">{session.title}</h1>
-        <div class="session-sub">Topic: {session.topic} • Created: {session.created_at}</div>
-      </div>
-
-      <div class="morphology-toggle-box">
-        <button class="morph-btn" onclick={toggleMorphology}>
-          <span class="btn-icon">⚡</span>
-          <span class="btn-text">MUTATE MORPHOLOGY [{morphology === 'editorial' ? 'TACTICAL' : 'EDITORIAL'}]</span>
-        </button>
-        <div class="token-tracker">TOKENS: {session.total_tokens.toLocaleString()}</div>
-      </div>
-    </header>
-
-    <!-- Agent Debate & Progress Surface -->
-    <section class="agents-surface">
-      <div class="agents-header">
-        <h2>ACTIVE AGENT MATRIX ({session.agents.length})</h2>
-        <span class="debate-status"><span class="pulse-dot"></span> {session.status}</span>
-      </div>
-      <div class="agents-grid">
-        {#each session.agents as ag}
-          <div class="agent-card status-{ag.status.toLowerCase()}">
-            <div class="ag-top">
-              <span class="ag-avatar">{ag.avatar}</span>
-              <div class="ag-name-block">
-                <span class="ag-name">{ag.name}</span>
-                <span class="ag-role">{ag.role}</span>
-              </div>
-              <span class="ag-status-pill">{ag.status}</span>
-            </div>
-            <div class="ag-body">
-              <div class="ag-model">Model: {ag.model}</div>
-              <div class="ag-confidence">Confidence: {(ag.confidence * 100).toFixed(0)}%</div>
-              {#if ag.current_thought}
-                <div class="ag-thought">"{ag.current_thought}"</div>
-              {/if}
-            </div>
+    <!-- ========================================================= -->
+    <!-- MORPHOLOGY A: EDITORIAL / SPATIAL NARRATIVE COMPOSITION  -->
+    <!-- ========================================================= -->
+    {#if morphology === 'editorial'}
+      <div class="editorial-layout">
+        <header class="editorial-header">
+          <div class="header-top-bar">
+            <span class="editorial-kicker">MULTIMIND EDITORIAL SURFACES</span>
+            <button class="morph-btn" onclick={toggleMorphology}>
+              ⚡ MUTATE TO TACTICAL MORPHOLOGY
+            </button>
           </div>
-        {/each}
-      </div>
-    </section>
 
-    <!-- Main Conversation Torture Surface -->
-    <section class="conversation-torture-surface">
-      <div class="conv-header">
-        <h2>SESSION CONVERSATION TRACE ({session.messages.length} MESSAGES)</h2>
-        <span class="scroll-pos-indicator">SCROLL Y: {Math.round(scrollY)}px</span>
-      </div>
+          <h1 class="editorial-title">{session.title}</h1>
+          <p class="editorial-subtitle">Topic: {session.topic} — {session.status} — {session.total_tokens.toLocaleString()} tokens</p>
+        </header>
 
-      <div class="messages-container" id="messages-list">
-        {#each session.messages as msg, i (msg.id)}
-          <article class="message-item role-{msg.sender_role}">
-            <div class="msg-avatar">{msg.avatar}</div>
-            <div class="msg-content-wrapper">
-              <div class="msg-meta">
-                <span class="msg-sender">{msg.sender_name}</span>
-                <span class="msg-role-tag">{msg.sender_role}</span>
-                <span class="msg-time">{msg.timestamp}</span>
-                <span class="msg-tokens">{msg.tokens} tokens</span>
-              </div>
-
-              <div class="msg-body">
-                <p>{msg.content}</p>
-                {#if msg.thought_process}
-                  <details class="thought-accordion">
-                    <summary>Internal Agent Reasoning Trace</summary>
-                    <p class="thought-text">{msg.thought_process}</p>
-                  </details>
-                {/if}
-                {#if msg.code_snippet}
-                  <pre class="code-block"><code>{msg.code_snippet}</code></pre>
-                {/if}
-              </div>
+        <div class="editorial-body-grid">
+          <!-- Floating Sticky Sidebar for Agent Status -->
+          <aside class="editorial-sidebar">
+            <h3 class="sidebar-heading">DEBATING AGENTS</h3>
+            <div class="editorial-agent-list">
+              {#each session.agents as ag}
+                <div class="editorial-agent-item status-{ag.status.toLowerCase()}">
+                  <span class="ag-avatar">{ag.avatar}</span>
+                  <div class="ag-info">
+                    <span class="ag-name">{ag.name}</span>
+                    <span class="ag-role">{ag.role}</span>
+                  </div>
+                  <span class="ag-status-pill">{ag.status}</span>
+                </div>
+              {/each}
             </div>
-          </article>
-        {/each}
-      </div>
+          </aside>
 
-      <!-- Chat Input Surface -->
-      <form class="input-surface" onsubmit={(e) => { e.preventDefault(); handleSendMessage(); }}>
-        <input
-          type="text"
-          bind:value={inputMessage}
-          placeholder="Inject prompt message into active debate session..."
-          class="chat-input"
-        />
-        <button type="submit" class="send-btn">SEND PROMPT</button>
-      </form>
-    </section>
+          <!-- Main Editorial Conversation Stream -->
+          <main class="editorial-main-stream">
+            <h2 class="stream-title">CONVERSATION NARRATIVE</h2>
+            <div class="messages-list">
+              {#each session.messages as msg (msg.id)}
+                <article class="editorial-card role-{msg.sender_role}">
+                  <div class="card-meta">
+                    <span class="avatar-circle">{msg.avatar}</span>
+                    <span class="sender-name">{msg.sender_name}</span>
+                    <span class="role-badge">{msg.sender_role}</span>
+                    <span class="time-stamp">{msg.timestamp}</span>
+                  </div>
+                  <div class="card-content">
+                    <p>{msg.content}</p>
+                    {#if msg.thought_process}
+                      <blockquote class="agent-thought-quote">
+                        <span class="quote-label">Internal Trace:</span> {msg.thought_process}
+                      </blockquote>
+                    {/if}
+                    {#if msg.code_snippet}
+                      <pre class="code-box"><code>{msg.code_snippet}</code></pre>
+                    {/if}
+                  </div>
+                </article>
+              {/each}
+            </div>
+
+            <!-- Floating Prompt Input Surface -->
+            <form class="editorial-input-bar" onsubmit={(e) => { e.preventDefault(); handleSendMessage(); }}>
+              <input type="text" bind:value={inputMessage} placeholder="Inject prompt into narrative..." class="edit-input" />
+              <button type="submit" class="edit-send-btn">POST PROMPT</button>
+            </form>
+          </main>
+        </div>
+      </div>
+    {/if}
+
+    <!-- ========================================================= -->
+    <!-- MORPHOLOGY B: TACTICAL / DENSE SPLIT TERMINAL HUD         -->
+    <!-- ========================================================= -->
+    {#if morphology === 'tactical'}
+      <div class="tactical-layout">
+        <!-- Top Tactical HUD Command Bar -->
+        <header class="tactical-hud-bar">
+          <div class="hud-left">
+            <span class="hud-tag">[TACTICAL MORPHOLOGY]</span>
+            <span class="hud-session-id">{session.id}</span>
+          </div>
+          <div class="hud-center">
+            <span class="hud-title">{session.title}</span>
+          </div>
+          <div class="hud-right">
+            <span class="hud-tokens">TOKENS: {session.total_tokens}</span>
+            <button class="morph-btn tactical" onclick={toggleMorphology}>
+              ⚡ MUTATE TO EDITORIAL
+            </button>
+          </div>
+        </header>
+
+        <!-- Segmented Split Terminal Surface -->
+        <div class="tactical-split-surface">
+          <!-- Top Strip for High-Density Agent Telemetry -->
+          <section class="tactical-telemetry-strip">
+            {#each session.agents as ag}
+              <div class="telemetry-box">
+                <div class="tel-top">
+                  <span class="tel-avatar">{ag.avatar}</span>
+                  <span class="tel-name">{ag.name}</span>
+                  <span class="tel-status">{ag.status}</span>
+                </div>
+                <div class="tel-metrics">
+                  <span>CONF: {(ag.confidence * 100).toFixed(0)}%</span>
+                  <span>MODEL: {ag.model}</span>
+                </div>
+              </div>
+            {/each}
+          </section>
+
+          <!-- Main Terminal Conversation Stream -->
+          <section class="tactical-terminal-stream">
+            <div class="terminal-messages">
+              {#each session.messages as msg (msg.id)}
+                <div class="terminal-row role-{msg.sender_role}">
+                  <span class="row-time">[{msg.timestamp}]</span>
+                  <span class="row-sender">&lt;{msg.sender_name}&gt;</span>
+                  <div class="row-content">
+                    <span>{msg.content}</span>
+                    {#if msg.thought_process}
+                      <div class="term-thought">&gt; THOUGHT: {msg.thought_process}</div>
+                    {/if}
+                  </div>
+                </div>
+              {/each}
+            </div>
+
+            <form class="tactical-command-line" onsubmit={(e) => { e.preventDefault(); handleSendMessage(); }}>
+              <span class="prompt-symbol">&gt;&gt;</span>
+              <input type="text" bind:value={inputMessage} placeholder="EXECUTE PROMPT..." class="cmd-input" />
+              <button type="submit" class="cmd-btn">RUN</button>
+            </form>
+          </section>
+        </div>
+      </div>
+    {/if}
   </div>
 {/if}
 
 <style>
-  /* Base Container */
   .multimind-app {
     position: relative;
     min-height: calc(100vh - 50px);
     height: calc(100vh - 50px);
     overflow-y: auto;
-    transition: background 0.3s ease, color 0.3s ease;
   }
 
   .bg-material-layer {
@@ -251,353 +287,388 @@
   @keyframes spin { 100% { transform: rotate(360deg); } }
 
   /* ========================================================= */
-  /* MORPHOLOGY A: EDITORIAL / SPATIAL                          */
+  /* MORPHOLOGY A: EDITORIAL STYLES                             */
   /* ========================================================= */
-  .multimind-app.editorial {
-    background: #faf8f5;
-    color: #1e293b;
-    font-family: Georgia, 'Times New Roman', serif;
-    padding: 2rem 4rem;
-  }
-
-  .editorial .app-header {
+  .editorial-layout {
     position: relative;
     z-index: 10;
-    border-bottom: 2px solid #e2e8f0;
+    max-width: 1300px;
+    margin: 0 auto;
+    padding: 2.5rem 2rem;
+    font-family: Georgia, 'Times New Roman', serif;
+    color: #1e293b;
+  }
+
+  .editorial-header {
+    border-bottom: 2px solid #cbd5e1;
     padding-bottom: 2rem;
-    margin-bottom: 3rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .header-top-bar {
     display: flex;
     justify-content: space-between;
-    align-items: flex-end;
+    align-items: center;
   }
 
-  .editorial .morphology-badge {
+  .editorial-kicker {
     font-family: -apple-system, sans-serif;
-    font-size: 0.75rem;
-    letter-spacing: 0.2em;
+    font-size: 0.8rem;
+    letter-spacing: 0.25em;
     font-weight: 700;
     color: #0284c7;
-    background: #e0f2fe;
-    padding: 0.3rem 0.8rem;
-    border-radius: 20px;
   }
 
-  .editorial .session-title {
-    font-size: 2.5rem;
+  .editorial-title {
+    font-size: 2.75rem;
     font-weight: 300;
-    margin: 0.5rem 0 0.25rem 0;
+    margin: 0.75rem 0 0.5rem 0;
+    letter-spacing: -0.02em;
   }
 
-  .editorial .session-sub {
+  .editorial-subtitle {
     font-family: -apple-system, sans-serif;
     color: #64748b;
-    font-size: 0.9rem;
+    margin: 0;
+    font-size: 0.95rem;
   }
 
-  .editorial .morph-btn {
+  .morph-btn {
     background: #0f172a;
     color: #fff;
     border: none;
-    padding: 0.8rem 1.6rem;
+    padding: 0.75rem 1.4rem;
     border-radius: 30px;
     font-family: -apple-system, sans-serif;
-    font-weight: 600;
-    font-size: 0.85rem;
+    font-weight: 700;
+    font-size: 0.8rem;
     cursor: pointer;
     box-shadow: 0 4px 14px rgba(0,0,0,0.15);
-    transition: transform 0.2s ease;
+    transition: all 0.2s ease;
   }
 
-  .editorial .morph-btn:hover {
-    transform: translateY(-2px);
+  .morph-btn:hover {
+    background: #0284c7;
   }
 
-  .editorial .token-tracker {
-    font-family: monospace;
-    font-size: 0.85rem;
-    color: #64748b;
-    margin-top: 0.5rem;
-    text-align: right;
-  }
-
-  .editorial .agents-surface {
-    position: relative;
-    z-index: 10;
-    margin-bottom: 4rem;
-  }
-
-  .editorial .agents-header h2 {
-    font-size: 1.25rem;
-    font-weight: 400;
-    letter-spacing: 0.05em;
-    margin-bottom: 1.5rem;
-    color: #334155;
-  }
-
-  .editorial .agents-grid {
+  .editorial-body-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 2rem;
+    grid-template-columns: 280px 1fr;
+    gap: 3rem;
   }
 
-  .editorial .agent-card {
-    background: rgba(255, 255, 255, 0.85);
+  .editorial-sidebar {
+    background: rgba(255, 255, 255, 0.9);
     backdrop-filter: blur(10px);
-    border: 1px solid #cbd5e1;
-    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
     padding: 1.5rem;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.03);
+    height: fit-content;
+    position: sticky;
+    top: 2rem;
   }
 
-  .editorial .ag-top {
+  .sidebar-heading {
+    font-family: -apple-system, sans-serif;
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+    color: #64748b;
+    margin: 0 0 1rem 0;
+  }
+
+  .editorial-agent-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .editorial-agent-item {
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    padding: 0.5rem;
+    border-radius: 8px;
+    background: #f8fafc;
   }
 
-  .editorial .ag-avatar { font-size: 1.8rem; }
-  .editorial .ag-name { font-weight: bold; font-family: -apple-system, sans-serif; display: block; }
-  .editorial .ag-role { font-size: 0.8rem; color: #64748b; font-family: -apple-system, sans-serif; }
-  .editorial .ag-status-pill {
-    margin-left: auto;
-    font-family: monospace;
-    font-size: 0.7rem;
-    padding: 0.2rem 0.5rem;
-    border-radius: 4px;
-    background: #e2e8f0;
-  }
+  .ag-avatar { font-size: 1.5rem; }
+  .ag-info { display: flex; flex-direction: column; flex: 1; }
+  .ag-name { font-family: -apple-system, sans-serif; font-size: 0.85rem; font-weight: bold; }
+  .ag-role { font-family: -apple-system, sans-serif; font-size: 0.75rem; color: #64748b; }
+  .ag-status-pill { font-family: monospace; font-size: 0.65rem; background: #e0f2fe; color: #0369a1; padding: 0.1rem 0.4rem; border-radius: 4px; }
 
-  .editorial .ag-thought {
-    font-style: italic;
-    font-size: 0.9rem;
-    color: #475569;
-    margin-top: 1rem;
-    padding-top: 0.75rem;
-    border-top: 1px solid #f1f5f9;
-  }
-
-  .editorial .conversation-torture-surface {
-    position: relative;
-    z-index: 10;
-    max-width: 900px;
-    margin: 0 auto;
-  }
-
-  .editorial .messages-container {
+  .editorial-main-stream {
     display: flex;
     flex-direction: column;
-    gap: 2rem;
+  }
+
+  .stream-title {
+    font-family: -apple-system, sans-serif;
+    font-size: 1rem;
+    letter-spacing: 0.1em;
+    color: #475569;
+    margin-bottom: 1.5rem;
+  }
+
+  .messages-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
     margin-bottom: 3rem;
   }
 
-  .editorial .message-item {
-    display: flex;
-    gap: 1.5rem;
+  .editorial-card {
     background: #ffffff;
     border-radius: 12px;
-    padding: 1.5rem;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.04);
     border: 1px solid #e2e8f0;
+    padding: 1.75rem;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.03);
   }
 
-  .editorial .msg-avatar { font-size: 2rem; }
-  .editorial .msg-sender { font-family: -apple-system, sans-serif; font-weight: bold; }
-  .editorial .msg-meta { font-size: 0.8rem; color: #94a3b8; font-family: -apple-system, sans-serif; display: flex; gap: 0.75rem; align-items: center; }
-  .editorial .msg-body { font-size: 1.05rem; line-height: 1.6; margin-top: 0.5rem; }
-
-  /* ========================================================= */
-  /* MORPHOLOGY B: TACTICAL / DENSE                            */
-  /* ========================================================= */
-  .multimind-app.tactical {
-    background: #07090e;
-    color: #00ffcc;
-    font-family: 'Courier New', monospace;
-    padding: 1rem 1.5rem;
+  .card-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    font-family: -apple-system, sans-serif;
+    font-size: 0.85rem;
   }
 
-  .tactical .app-header {
+  .avatar-circle { font-size: 1.4rem; }
+  .sender-name { font-weight: bold; color: #0f172a; }
+  .role-badge { background: #f1f5f9; color: #64748b; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.75rem; }
+  .time-stamp { color: #94a3b8; margin-left: auto; font-size: 0.75rem; }
+
+  .card-content p {
+    font-size: 1.1rem;
+    line-height: 1.65;
+    margin: 0;
+    color: #334155;
+  }
+
+  .agent-thought-quote {
+    margin: 1rem 0 0 0;
+    padding: 0.75rem 1rem;
+    background: #f8fafc;
+    border-left: 3px solid #0284c7;
+    font-style: italic;
+    font-size: 0.95rem;
+    color: #475569;
+  }
+
+  .quote-label { font-family: -apple-system, sans-serif; font-weight: bold; font-style: normal; color: #0284c7; }
+
+  .code-box {
+    background: #0f172a;
+    color: #38bdf8;
+    padding: 1rem;
+    border-radius: 6px;
+    font-family: monospace;
+    font-size: 0.85rem;
+    margin-top: 1rem;
+  }
+
+  .editorial-input-bar {
+    position: sticky;
+    bottom: 1.5rem;
+    display: flex;
+    gap: 0.75rem;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid #cbd5e1;
+    padding: 0.75rem;
+    border-radius: 50px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    backdrop-filter: blur(10px);
+  }
+
+  .edit-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    padding: 0.5rem 1.25rem;
+    font-family: -apple-system, sans-serif;
+    font-size: 0.95rem;
+    background: transparent;
+  }
+
+  .edit-send-btn {
+    background: #0284c7;
+    color: #fff;
+    border: none;
+    padding: 0.6rem 1.5rem;
+    border-radius: 30px;
+    font-family: -apple-system, sans-serif;
+    font-weight: bold;
+    cursor: pointer;
+  }
+
+  /* ========================================================= */
+  /* MORPHOLOGY B: TACTICAL STYLES                              */
+  /* ========================================================= */
+  .tactical-layout {
     position: relative;
     z-index: 10;
-    border: 1px solid #00ffcc;
-    background: rgba(7, 9, 14, 0.9);
     padding: 1rem;
-    margin-bottom: 1.5rem;
+    font-family: 'Courier New', monospace;
+    color: #00ffcc;
+  }
+
+  .tactical-hud-bar {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    background: rgba(7, 9, 14, 0.95);
+    border: 1px solid #00ffcc;
+    padding: 0.75rem 1.25rem;
+    margin-bottom: 1rem;
   }
 
-  .tactical .morphology-badge {
-    background: #00ffcc;
-    color: #000;
-    font-weight: 900;
-    padding: 0.1rem 0.5rem;
-    font-size: 0.7rem;
-  }
+  .hud-tag { color: #ffaa00; font-weight: bold; margin-right: 0.75rem; }
+  .hud-session-id { color: #888; font-size: 0.8rem; }
+  .hud-title { color: #fff; font-weight: bold; font-size: 1.1rem; }
+  .hud-tokens { color: #ffaa00; margin-right: 1rem; font-size: 0.85rem; }
 
-  .tactical .session-title {
-    font-size: 1.4rem;
-    margin: 0.25rem 0;
-    color: #fff;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-
-  .tactical .session-sub { color: #00ffcc; opacity: 0.7; font-size: 0.75rem; }
-
-  .tactical .morph-btn {
+  .morph-btn.tactical {
     background: transparent;
     border: 1px solid #00ffcc;
     color: #00ffcc;
-    padding: 0.5rem 1rem;
-    font-family: monospace;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.2s;
+    border-radius: 0;
   }
 
-  .tactical .morph-btn:hover {
-    background: #00ffcc;
-    color: #000;
+  .tactical-split-surface {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
   }
 
-  .tactical .token-tracker { font-size: 0.75rem; color: #ffaa00; margin-top: 0.25rem; text-align: right; }
-
-  .tactical .agents-surface {
-    position: relative;
-    z-index: 10;
-    margin-bottom: 2rem;
-  }
-
-  .tactical .agents-header h2 {
-    font-size: 0.9rem;
-    color: #ffaa00;
-    margin-bottom: 0.75rem;
-    letter-spacing: 0.1em;
-  }
-
-  .tactical .agents-grid {
+  .tactical-telemetry-strip {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 1rem;
   }
 
-  .tactical .agent-card {
-    background: rgba(0, 0, 0, 0.8);
-    border: 1px solid rgba(0, 255, 204, 0.3);
+  .telemetry-box {
+    background: rgba(0, 0, 0, 0.85);
+    border: 1px solid rgba(0, 255, 204, 0.4);
     padding: 0.75rem;
-    font-size: 0.8rem;
   }
 
-  .tactical .ag-top { display: flex; justify-content: space-between; align-items: center; }
-  .tactical .ag-name { font-weight: bold; color: #fff; }
-  .tactical .ag-status-pill { background: #00ffcc; color: #000; font-weight: bold; padding: 0.1rem 0.3rem; font-size: 0.65rem; }
-  .tactical .ag-thought { color: #888; font-size: 0.75rem; margin-top: 0.5rem; }
+  .tel-top { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
+  .tel-avatar { font-size: 1.2rem; }
+  .tel-name { font-weight: bold; color: #fff; flex: 1; font-size: 0.85rem; }
+  .tel-status { background: #00ffcc; color: #000; font-weight: bold; font-size: 0.65rem; padding: 0.1rem 0.3rem; }
 
-  .tactical .conversation-torture-surface {
-    position: relative;
-    z-index: 10;
+  .tel-metrics { display: flex; justify-content: space-between; font-size: 0.75rem; color: #888; }
+
+  .tactical-terminal-stream {
+    background: rgba(5, 8, 15, 0.95);
+    border: 1px solid #00ffcc;
+    padding: 1rem;
   }
 
-  .tactical .messages-container {
+  .terminal-messages {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
   }
 
-  .tactical .message-item {
-    background: rgba(10, 15, 25, 0.9);
-    border-left: 3px solid #00ffcc;
-    padding: 0.75rem 1rem;
+  .terminal-row {
     display: flex;
-    gap: 1rem;
+    gap: 0.75rem;
+    font-size: 0.85rem;
+    border-bottom: 1px dashed rgba(0, 255, 204, 0.15);
+    padding-bottom: 0.5rem;
   }
 
-  .tactical .msg-avatar { font-size: 1.2rem; }
-  .tactical .msg-sender { font-weight: bold; color: #fff; }
-  .tactical .msg-meta { font-size: 0.7rem; color: #666; display: flex; gap: 0.75rem; }
-  .tactical .msg-body { font-size: 0.85rem; color: #00ffcc; margin-top: 0.25rem; }
+  .row-time { color: #ffaa00; }
+  .row-sender { color: #fff; font-weight: bold; white-space: nowrap; }
+  .row-content { flex: 1; color: #00ffcc; }
+  .term-thought { color: #888; font-size: 0.75rem; margin-top: 0.25rem; }
 
-  /* Shared Form Input */
-  .input-surface {
-    position: sticky;
-    bottom: 1rem;
-    z-index: 50;
+  .tactical-command-line {
     display: flex;
-    gap: 0.5rem;
-    background: rgba(15, 23, 42, 0.95);
-    padding: 0.75rem;
-    border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(10px);
+    align-items: center;
+    gap: 0.75rem;
+    background: #000;
+    border: 1px solid #00ffcc;
+    padding: 0.5rem 0.75rem;
   }
 
-  .chat-input {
+  .prompt-symbol { color: #ffaa00; font-weight: bold; }
+
+  .cmd-input {
     flex: 1;
-    background: rgba(0, 0, 0, 0.5);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #fff;
-    padding: 0.75rem 1rem;
-    border-radius: 6px;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #00ffcc;
     font-family: inherit;
     font-size: 0.9rem;
   }
 
-  .send-btn {
-    background: #38bdf8;
+  .cmd-btn {
+    background: #00ffcc;
     color: #000;
     border: none;
-    padding: 0.75rem 1.5rem;
-    border-radius: 6px;
+    padding: 0.4rem 1rem;
+    font-family: inherit;
     font-weight: bold;
     cursor: pointer;
   }
 
-  .code-block {
-    background: #000;
-    color: #00ffcc;
-    padding: 0.75rem;
-    border-radius: 4px;
-    overflow-x: auto;
-    font-size: 0.8rem;
-    margin-top: 0.5rem;
-  }
-
-  .thought-accordion {
-    margin-top: 0.5rem;
-    font-size: 0.8rem;
-    color: #94a3b8;
-  }
-
-  .pulse-dot {
-    display: inline-block;
-    width: 8px;
-    height: 8px;
-    background: #10b981;
-    border-radius: 50%;
-    margin-right: 0.4rem;
-    box-shadow: 0 0 8px #10b981;
-  }
-
   /* ========================================================= */
-  /* MOBILE HARD GATE (390x844) RECOMPOSITION                  */
+  /* PURPOSE-BUILT MOBILE COMPOSITIONS (390x844 HARD GATE)      */
   /* ========================================================= */
   @media (max-width: 768px) {
-    .multimind-app.editorial, .multimind-app.tactical {
-      padding: 0.75rem;
+    /* Purpose-built Mobile Editorial Layout */
+    .editorial-layout {
+      padding: 1rem;
     }
 
-    .app-header {
+    .editorial-title { font-size: 1.75rem; }
+    .editorial-body-grid {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+
+    .editorial-sidebar {
+      position: relative;
+      top: 0;
+      padding: 1rem;
+    }
+
+    .editorial-agent-list {
+      flex-direction: row;
+      overflow-x: auto;
+    }
+
+    .editorial-agent-item {
+      min-width: 140px;
+    }
+
+    .editorial-card {
+      padding: 1rem;
+    }
+
+    /* Purpose-built Mobile Tactical Layout */
+    .tactical-layout {
+      padding: 0.5rem;
+    }
+
+    .tactical-hud-bar {
       flex-direction: column;
-      align-items: flex-start !important;
-      gap: 0.75rem;
+      align-items: flex-start;
+      gap: 0.5rem;
     }
 
-    .session-title { font-size: 1.3rem !important; }
-    .agents-grid { grid-template-columns: 1fr !important; }
-    .editorial .message-item, .tactical .message-item {
-      padding: 0.75rem;
+    .tactical-telemetry-strip {
+      grid-template-columns: 1fr;
+    }
+
+    .terminal-row {
+      flex-direction: column;
+      gap: 0.25rem;
     }
   }
 

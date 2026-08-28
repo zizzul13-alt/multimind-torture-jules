@@ -1,12 +1,17 @@
 from pydantic import BaseModel, Field
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Literal
+
+AgentStatusType = Literal["ACTIVE", "WAITING", "RUNNING", "PENDING", "THINKING", "COMPLETED"]
+SenderRoleType = Literal["user", "assistant", "agent", "system"]
+SessionStatusType = Literal["ACTIVE_DEBATE", "PAUSED", "COMPLETED"]
+ActionType = Literal["send_message", "trigger_debate", "reset_session"]
 
 class AgentStatus(BaseModel):
     id: str
     name: str
     role: str
     avatar: str
-    status: str # "ACTIVE", "WAITING", "RUNNING", "PENDING", "THINKING", "COMPLETED"
+    status: AgentStatusType
     model: str
     tokens_used: int
     confidence: float
@@ -16,30 +21,32 @@ class Message(BaseModel):
     id: str
     sender_id: str
     sender_name: str
-    sender_role: str # "user", "assistant", "agent", "system"
+    sender_role: SenderRoleType
     avatar: str
     content: str
     timestamp: str
     thought_process: Optional[str] = None
     code_snippet: Optional[str] = None
     tokens: int = 0
-    agent_status: Optional[str] = None
+    agent_status: Optional[AgentStatusType] = None
 
 class Session(BaseModel):
     id: str
     title: str
     topic: str
     created_at: str
-    status: str # "ACTIVE_DEBATE", "PAUSED", "COMPLETED"
+    status: SessionStatusType
     total_tokens: int
-    active_morphology: str # "editorial" or "tactical"
     user_name: str
     user_avatar: str
     agents: List[AgentStatus]
     messages: List[Message]
 
+class ActionPayloadSendMessage(BaseModel):
+    text: str
+
 class ActionRequest(BaseModel):
-    action_type: str # "send_message", "trigger_debate", "change_morphology", "reset_session"
+    action_type: ActionType
     payload: Optional[Dict[str, Any]] = None
 
 class ActionResponse(BaseModel):
