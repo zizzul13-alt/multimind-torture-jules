@@ -89,7 +89,7 @@ def index() -> rx.Component:
                 }, true);
 
                 const observer = new MutationObserver(() => {
-                    const scrollAreas = ['editorial-scroll-area', 'tactical-scroll-area', 'mobile-scroll-area'];
+                    const scrollAreas = ['editorial-scroll-area', 'tactical-scroll-area', 'mobile-scroll-area-a', 'mobile-scroll-area-b'];
                     scrollAreas.forEach(id => {
                         const el = document.getElementById(id);
                         if (el && currentScroll > 0) {

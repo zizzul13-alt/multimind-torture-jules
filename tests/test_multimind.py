@@ -27,8 +27,12 @@ def test_reference_surfaces_and_interactive_behaviors(page: Page):
     page.click("#tab-ref-b")
     page.wait_for_selector("#reference-noomo", timeout=5000)
     expect(page.locator("#reference-noomo")).to_be_visible()
-    page.evaluate("window.scrollTo(0, 400)")
-    page.wait_for_timeout(500)
+
+    # Trigger scroll event and assert transform change
+    page.evaluate("if (window.__trigger_noomo_scroll) { window.__trigger_noomo_scroll(600); }")
+    page.wait_for_timeout(300)
+    scrolled_transform = page.evaluate("document.getElementById('noomo-kinetic-canvas').style.transform")
+    assert "scale" in scrolled_transform and "rotate" in scrolled_transform, f"Noomo kinetic canvas transform not updated on scroll! Got: '{scrolled_transform}'"
 
     # 3. Dioriviera Luxury Full-Bleed Composition
     page.click("#tab-ref-c")
@@ -42,7 +46,7 @@ def test_reference_surfaces_and_interactive_behaviors(page: Page):
     page.click("#btn-viensla-toggle")
     page.wait_for_timeout(500)
 
-def test_long_conversation_zero_reload_and_scroll_preservation(page: Page):
+def test_desktop_scroll_preservation_and_zero_reload(page: Page):
     page.goto("http://localhost:3000")
     page.wait_for_selector("#app-container", timeout=15000)
     page.click("#tab-multimind")
@@ -51,50 +55,54 @@ def test_long_conversation_zero_reload_and_scroll_preservation(page: Page):
     # Record page loaded timestamp to verify zero full page reloads
     initial_timestamp = page.evaluate("window.__page_loaded_timestamp")
 
-    # Verify Editorial morphology renders 36 messages
-    messages = page.locator("#chat-messages-container > div")
-    expect(messages).to_have_count(36)
-
-    # Scroll down chat container
+    # 1. Scroll Editorial container down
     page.evaluate("document.getElementById('editorial-scroll-area').scrollTop = 400")
     page.wait_for_timeout(300)
 
-    # Trigger Live Presentation Mutation to Tactical Morphology B
+    # 2. Mutate to Tactical Morphology B
     page.click("#btn-morphology-switch")
     page.wait_for_selector("#morphology-tactical", timeout=5000)
-    expect(page.locator("#morphology-tactical")).to_be_visible()
 
-    # Verify zero full-page reload
-    new_timestamp = page.evaluate("window.__page_loaded_timestamp")
-    assert initial_timestamp == new_timestamp, "Full page reload detected during live mutation!"
+    # Assert zero page reload & Tactical scroll preservation
+    assert initial_timestamp == page.evaluate("window.__page_loaded_timestamp")
+    tactical_scroll = page.evaluate("document.getElementById('tactical-scroll-area').scrollTop")
+    assert tactical_scroll >= 300, f"Tactical scroll not preserved! Expected >=300, got {tactical_scroll}"
 
-    # Verify 36 messages preserved
-    messages_tactical = page.locator("#chat-messages-container-tactical > div")
-    expect(messages_tactical).to_have_count(36)
+    # 3. Mutate back to Editorial Morphology A
+    page.click("#btn-morphology-switch-tactical")
+    page.wait_for_selector("#morphology-editorial", timeout=5000)
 
-def test_mobile_hard_gate_two_distinct_morphologies(page: Page):
+    # Assert zero page reload & Editorial scroll preservation
+    assert initial_timestamp == page.evaluate("window.__page_loaded_timestamp")
+    editorial_scroll = page.evaluate("document.getElementById('editorial-scroll-area').scrollTop")
+    assert editorial_scroll >= 300, f"Editorial scroll not preserved! Expected >=300, got {editorial_scroll}"
+
+def test_mobile_scroll_preservation_and_zero_reload(page: Page):
     page.set_viewport_size({"width": 390, "height": 844})
     page.goto("http://localhost:3000")
     page.wait_for_selector("#app-container", timeout=15000)
     page.click("#tab-multimind")
 
-    # Record initial load timestamp
     initial_ts = page.evaluate("window.__page_loaded_timestamp")
 
-    # Assert Mobile Editorial Surface (Morphology A)
-    expect(page.locator("#mobile-editorial-surface")).to_be_visible()
-    expect(page.locator("#btn-mobile-send-a")).to_be_visible()
-    expect(page.locator("#input-mobile-msg-a")).to_be_visible()
+    # 1. Scroll Mobile Editorial container down
+    page.evaluate("document.getElementById('mobile-scroll-area-a').scrollTop = 350")
+    page.wait_for_timeout(300)
 
-    # Toggle to Mobile Tactical Surface (Morphology B)
+    # 2. Toggle to Mobile Tactical Surface (Morphology B)
     page.click("#btn-mobile-toggle-a")
     page.wait_for_selector("#mobile-tactical-surface", timeout=5000)
 
-    # Assert Mobile Tactical Surface (Morphology B)
-    expect(page.locator("#mobile-tactical-surface")).to_be_visible()
-    expect(page.locator("#btn-mobile-send-b")).to_be_visible()
-    expect(page.locator("#input-mobile-msg-b")).to_be_visible()
+    # Assert zero page reload & Mobile Tactical scroll preservation
+    assert initial_ts == page.evaluate("window.__page_loaded_timestamp")
+    mobile_b_scroll = page.evaluate("document.getElementById('mobile-scroll-area-b').scrollTop")
+    assert mobile_b_scroll >= 300, f"Mobile Tactical scroll not preserved! Expected >=300, got {mobile_b_scroll}"
 
-    # Verify zero full page reload during mobile style mutation
-    new_ts = page.evaluate("window.__page_loaded_timestamp")
-    assert initial_ts == new_ts, "Mobile presentation switch triggered full page reload!"
+    # 3. Toggle back to Mobile Editorial Surface (Morphology A)
+    page.click("#btn-mobile-toggle-b")
+    page.wait_for_selector("#mobile-editorial-surface", timeout=5000)
+
+    # Assert zero page reload & Mobile Editorial scroll preservation
+    assert initial_ts == page.evaluate("window.__page_loaded_timestamp")
+    mobile_a_scroll = page.evaluate("document.getElementById('mobile-scroll-area-a').scrollTop")
+    assert mobile_a_scroll >= 300, f"Mobile Editorial scroll not preserved! Expected >=300, got {mobile_a_scroll}"

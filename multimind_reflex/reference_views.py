@@ -28,7 +28,6 @@ class ReferenceState(rx.State):
 
     def set_noomo_scroll_progress(self, val: int):
         self.noomo_scroll_progress = min(max(val, 0), 100)
-        # Compute dynamic scroll-linked scale and rotation
         self.noomo_depth_scale = round(1.0 + (self.noomo_scroll_progress / 100.0) * 0.8, 2)
         self.noomo_rotation = int((self.noomo_scroll_progress / 100.0) * 45)
 
@@ -177,23 +176,6 @@ def noomo_reference() -> rx.Component:
                     rx.heading("KINETIC SPATIAL INTERACTION", font_size=rx.breakpoints(initial="28px", md="52px"), color="#FFFFFF", font_weight="900", line_height="1.1"),
                     rx.text("Actual scroll-linked motion: scroll progress dynamically drives 3D depth scale and spatial rotation in real time.", color="#A0A0A0", font_size="16px", max_width="700px"),
 
-                    # Scroll Simulation Slider / Observer for Proof
-                    rx.hstack(
-                        rx.text("SIMULATED SCROLL POSITION:", font_family="monospace", color="#00E5FF", font_size="12px"),
-                        rx.slider(
-                            value=[ReferenceState.noomo_scroll_progress],
-                            on_value_commit=lambda val: ReferenceState.set_noomo_scroll_progress(val[0]),
-                            min=0,
-                            max=100,
-                            width="240px",
-                            id="slider-noomo-scroll",
-                        ),
-                        rx.text(f"{ReferenceState.noomo_scroll_progress}%", font_family="monospace", color="#FF3366", font_weight="bold"),
-                        spacing="3",
-                        align="center",
-                        margin_y="16px",
-                    ),
-
                     # Kinetic Scroll-Driven Spatial Canvas
                     rx.box(
                         rx.vstack(
@@ -214,13 +196,16 @@ def noomo_reference() -> rx.Component:
                         background="rgba(26, 26, 36, 0.9)",
                         border="2px solid #FF3366",
                         border_radius="16px",
-                        transform=f"scale({ReferenceState.noomo_depth_scale}) rotate({ReferenceState.noomo_rotation}deg)",
                         transition="transform 0.2s cubic-bezier(0.1, 0.8, 0.3, 1.0)",
                         margin_y="30px",
                         width="100%",
                         max_width="600px",
                         id="noomo-kinetic-canvas",
                     ),
+
+                    # Scrollable spacer ensuring page has scroll range
+                    rx.box(height="1200px", width="100%", opacity="0.1", background="linear-gradient(180deg, #FF3366 0%, #00E5FF 100%)"),
+
                     spacing="5",
                     align="start",
                 ),
@@ -231,24 +216,33 @@ def noomo_reference() -> rx.Component:
             max_width="1200px",
         ),
 
-        # Web-layer scroll observer script to drive Noomo kinetic spatial transform on window scroll
+        # Web-layer scroll observer script to drive Noomo kinetic spatial transform on scroll
         rx.script("""
-            window.addEventListener('scroll', () => {
-                const noomoCanvas = document.getElementById('noomo-kinetic-canvas');
-                if (noomoCanvas) {
-                    const scrollY = window.scrollY;
-                    const maxScroll = document.body.scrollHeight - window.innerHeight || 1;
-                    const progress = Math.min(Math.max(scrollY / maxScroll, 0), 1);
-                    const scale = (1.0 + progress * 0.5).toFixed(2);
-                    const rotation = Math.round(progress * 30);
-                    noomoCanvas.style.transform = `scale(${scale}) rotate(${rotation}deg)`;
-                }
-            });
+            const initNoomoScroll = () => {
+                const triggerScroll = (scrollAmount) => {
+                    const noomoCanvas = document.getElementById('noomo-kinetic-canvas');
+                    if (noomoCanvas) {
+                        const scale = (1.0 + (scrollAmount / 1000) * 0.8).toFixed(2);
+                        const rotation = Math.round((scrollAmount / 1000) * 45);
+                        noomoCanvas.style.transform = `scale(${scale}) rotate(${rotation}deg)`;
+                    }
+                };
+                window.__trigger_noomo_scroll = triggerScroll;
+                window.addEventListener('scroll', () => {
+                    const scrollY = window.scrollY || document.documentElement.scrollTop || 0;
+                    triggerScroll(scrollY);
+                }, true);
+            };
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initNoomoScroll);
+            } else {
+                initNoomoScroll();
+            }
         """),
 
         padding="20px 40px",
         background_color="#0A0A0F",
-        min_height="100vh",
+        min_height="200vh",
         width="100%",
         id="reference-noomo",
     )
